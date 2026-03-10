@@ -16,6 +16,7 @@
  */
 
 #include "KeePass2.h"
+#include <QObject>
 #include "crypto/CryptoHash.h"
 #include "crypto/kdf/AesKdf.h"
 #include "crypto/kdf/Argon2Kdf.h"

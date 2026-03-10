@@ -1,0 +1,59 @@
+#ifndef QTCORE_H
+#define QTCORE_H
+
+#include "QtGlobal"
+
+class QCoreApplication {
+public:
+    static QString translate(const char*, const char* s) { return QString(s); }
+};
+
+#include "QChar"
+#include "QByteArray"
+#include "QString"
+#include "QRegularExpression"
+#include "QVector"
+#include "QList"
+#include "QSet"
+#include "QSharedPointer"
+#include "QScopedPointer"
+#include "QPointer"
+#include "QUuid"
+#include "QObject"
+#include "QMutex"
+#include "QDateTime"
+#include "QLocale"
+#include "QHash"
+#include "QMap"
+#include "QSettings"
+#include "QTimer"
+#include "QFileSystemWatcher"
+#include "QTextStream"
+#include "QFileInfo"
+#include "QSaveFile"
+#include "QTemporaryFile"
+#include "QProcessEnvironment"
+#include "QMetaType"
+#include "QVariant"
+#include "QVariantMap"
+#include "QApplication"
+#include "QFutureWatcher"
+#include "QtConcurrent"
+#include "QDebug"
+#include "QLoggingCategory"
+#include "QThread"
+#include "QJsonDocument"
+#include "QEventLoop"
+#include "QStringBuilder"
+#include "QScopeGuard"
+
+template <typename K, typename V>
+class QMultiHash : public QHash<K, V> {};
+
+#include "QUrl"
+#include "QFile"
+#include "QBuffer"
+#include "QXmlStreamReader"
+#include "QCryptographicHash"
+
+#endif

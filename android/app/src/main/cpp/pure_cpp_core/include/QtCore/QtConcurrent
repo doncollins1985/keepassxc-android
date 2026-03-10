@@ -1,0 +1,28 @@
+#ifndef QTCONCURRENT_H
+#define QTCONCURRENT_H
+
+#include "QFutureWatcher"
+
+namespace QtConcurrent {
+    template <typename Function>
+    auto run(Function f) -> QFuture<decltype(f())> {
+        using RetType = decltype(f());
+        if constexpr (std::is_void_v<RetType>) {
+            f();
+            return QFuture<void>();
+        } else {
+            return QFuture<RetType>(f());
+        }
+    }
+    
+    template <typename Sequence, typename KeepFunctor>
+    Sequence blockingFiltered(const Sequence& sequence, KeepFunctor filterFunction) {
+        Sequence res;
+        for (const auto& item : sequence) {
+            if (filterFunction(item)) res.append(item);
+        }
+        return res;
+    }
+}
+
+#endif

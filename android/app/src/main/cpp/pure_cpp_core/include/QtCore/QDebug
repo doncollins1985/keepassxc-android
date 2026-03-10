@@ -1,0 +1,14 @@
+#ifndef QDEBUG_H
+#define QDEBUG_H
+
+#include "QtGlobal"
+#include "QString"
+
+class QDebug {
+public:
+    QDebug() {}
+    template <typename T> QDebug& operator<<(const T&) { return *this; }
+    QDebug& nospace() { return *this; }
+};
+
+#endif

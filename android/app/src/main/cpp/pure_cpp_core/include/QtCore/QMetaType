@@ -1,0 +1,10 @@
+#ifndef QMETATYPE_H
+#define QMETATYPE_H
+class QMetaType {
+public:
+    enum Type { UInt, LongLong, ULongLong, QString, Bool, QByteArray, Int };
+};
+#define Q_DECLARE_METATYPE(Type)
+#include "QSharedPointer"
+#include "QUrl"
+#endif

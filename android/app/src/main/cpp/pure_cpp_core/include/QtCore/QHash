@@ -1,0 +1,252 @@
+#ifndef QHASH_H
+#define QHASH_H
+
+#include "QtGlobal"
+#include <map>
+#include <unordered_map>
+
+#include "QList"
+#include "QSet"
+
+template <typename K, typename V, typename Base> class QMapBase : public Base
+{
+public:
+    using Base::Base;
+
+    class iterator
+    {
+        typename Base::iterator it;
+
+    public:
+        iterator() = default;
+        iterator(typename Base::iterator i)
+            : it(i)
+        {
+        }
+        iterator& operator++()
+        {
+            ++it;
+            return *this;
+        }
+        bool operator!=(const iterator& other) const
+        {
+            return it != other.it;
+        }
+        bool operator==(const iterator& other) const
+        {
+            return it == other.it;
+        }
+        V& operator*()
+        {
+            return it->second;
+        }
+        V* operator->()
+        {
+            return &it->second;
+        }
+        K key() const
+        {
+            return it->first;
+        }
+        V& value() const
+        {
+            return it->second;
+        }
+    };
+
+    class const_iterator
+    {
+        typename Base::const_iterator it;
+
+    public:
+        const_iterator() = default;
+        const_iterator(typename Base::const_iterator i)
+            : it(i)
+        {
+        }
+        const_iterator(iterator i)
+            : it(i.it) // Corrected: Access the underlying iterator from the non-const iterator
+        {
+        }
+        const_iterator& operator++()
+        {
+            ++it;
+            return *this;
+        }
+        bool operator!=(const const_iterator& other) const
+        {
+            return it != other.it;
+        }
+        bool operator==(const const_iterator& other) const
+        {
+            return it == other.it;
+        }
+        const V& operator*() const
+        {
+            return it->second;
+        }
+        const V* operator->() const
+        {
+            return &it->second;
+        }
+        K key() const
+        {
+            return it->first;
+        }
+        const V& value() const
+        {
+            return it->second;
+        }
+    };
+
+    iterator begin()
+    {
+        return iterator(Base::begin());
+    }
+    iterator end()
+    {
+        return iterator(Base::end());
+    }
+    const_iterator begin() const
+    {
+        return const_iterator(Base::begin());
+    }
+    const_iterator end() const
+    {
+        return const_iterator(Base::end());
+    }
+    const_iterator constBegin() const
+    {
+        return const_iterator(Base::begin());
+    }
+    const_iterator constEnd() const
+    {
+        return const_iterator(Base::end());
+    }
+    const_iterator find(const K& key) const
+    {
+        return const_iterator(Base::find(key));
+    }
+    iterator find(const K& key)
+    {
+        return iterator(Base::find(key));
+    }
+    bool contains(const K& key) const
+    {
+        return Base::find(key) != Base::end();
+    }
+    int remove(const K& key)
+    {
+        return Base::erase(key);
+    }
+    V value(const K& key, const V& defaultValue = V()) const
+    {
+        auto it = Base::find(key);
+        return (it != Base::end()) ? it->second : defaultValue;
+    }
+    V take(const K& key)
+    {
+        auto it = Base::find(key);
+        if (it != Base::end()) {
+            V res = it->second;
+            this->erase(it);
+            return res;
+        }
+        return V();
+    }
+
+    V operator[](const K& key) const
+    {
+        return value(key);
+    }
+
+    V& operator[](const K& key)
+    {
+        return Base::operator[](key);
+    }
+
+    iterator insert(const K& key, const V& value)
+    {
+        Base::operator[](key) = value;
+        return find(key);
+    }
+
+    bool isEmpty() const
+    {
+        return this->empty();
+    }
+    int count() const
+    {
+        return static_cast<int>(this->size());
+    }
+
+    QList<K> keys() const
+    {
+        QList<K> res;
+        for (auto it = Base::begin(); it != Base::end(); ++it)
+            res.push_back(it->first);
+        return res;
+    }
+
+    QList<V> values() const
+    {
+        QList<V> res;
+        for (auto it = Base::begin(); it != Base::end(); ++it)
+            res.push_back(it->second);
+        return res;
+    }
+
+    void clear()
+    {
+        Base::clear();
+    }
+};
+
+template <typename K, typename V> class QHash : public QMapBase<K, V, std::unordered_map<K, V>>
+{
+public:
+    using QMapBase<K, V, std::unordered_map<K, V>>::QMapBase;
+};
+
+
+
+template <typename K, typename V> class QHashIterator
+{
+public:
+    QHashIterator(const QHash<K, V>& hash)
+        : m_hash(hash)
+        , m_it(hash.begin())
+    {
+    }
+    bool hasNext() const
+    {
+        return m_it != m_hash.end();
+    }
+    void next()
+    {
+        ++m_it;
+    }
+    K key() const
+    {
+        return m_it.key();
+    }
+    V value() const
+    {
+        return m_it.value();
+    }
+
+private:
+    const QHash<K, V>& m_hash;
+    typename QHash<K, V>::const_iterator m_it;
+};
+
+namespace std {
+    template <typename T1, typename T2>
+    struct hash<std::pair<T1, T2>> {
+        size_t operator()(const std::pair<T1, T2>& p) const {
+            return std::hash<T1>()(p.first) ^ (std::hash<T2>()(p.second) << 1);
+        }
+    };
+}
+
+#endif

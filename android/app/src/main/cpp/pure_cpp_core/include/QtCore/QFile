@@ -1,0 +1,192 @@
+#ifndef QFILE_H
+#define QFILE_H
+
+#include "QByteArray"
+#include "QString"
+#include "QtGlobal"
+#include "QDateTime"
+#include <cstdio>
+#include <fstream>
+#include <string>
+#include <vector>
+
+#include "QIODevice"
+class QFile : public QIODevice
+{
+public:
+    QFile()
+        : m_isOpen(false)
+    {
+    }
+    QFile(const QString& name)
+        : m_name(name)
+        , m_isOpen(false)
+    {
+    }
+
+    void setFileName(const QString& name)
+    {
+        m_name = name;
+    }
+    QString fileName() const
+    {
+        return m_name;
+    }
+
+    bool exists() const
+    {
+        return exists(m_name);
+    }
+    static bool exists(const QString& name)
+    {
+        std::ifstream f(name.c_str());
+        return f.good();
+    }
+
+    bool isOpen() const override
+    {
+        return m_isOpen;
+    }
+
+    bool open(OpenMode mode) override
+    {
+        std::ios::openmode m = std::ios::binary;
+        if (mode & ReadOnly)
+            m |= std::ios::in;
+        if (mode & WriteOnly)
+            m |= std::ios::out;
+        if (mode & Append)
+            m |= std::ios::app;
+        if (mode & Truncate)
+            m |= std::ios::trunc;
+
+        m_file.open(m_name.c_str(), m);
+        m_isOpen = m_file.is_open();
+        if (m_isOpen) m_openMode = mode;
+        return m_isOpen;
+    }
+
+    void close() override
+    {
+        if (m_file.is_open())
+            m_file.close();
+        m_isOpen = false;
+        m_openMode = NotOpen;
+    }
+
+    bool seek(qint64 pos) override
+    {
+        m_file.clear();
+        m_file.seekg(pos);
+        m_file.seekp(pos);
+        return true;
+    }
+
+    qint64 readData(char *data, qint64 maxlen) override
+    {
+        m_file.read(data, maxlen);
+        return m_file.gcount();
+    }
+
+    qint64 writeData(const char *data, qint64 len) override
+    {
+        m_file.write(data, len);
+        return len;
+    }
+
+    QByteArray peek(int len) override
+    {
+        qint64 pos = m_file.tellg();
+        QByteArray res(len, Qt::Uninitialized);
+        m_file.read(res.data(), len);
+        res.resize(static_cast<int>(m_file.gcount()));
+        m_file.clear();
+        m_file.seekg(pos);
+        return res;
+    }
+
+    qint64 size() const override
+    {
+        std::ifstream f(m_name.c_str(), std::ios::binary | std::ios::ate);
+        return f.tellg();
+    }
+
+    bool atEnd() const override
+    {
+        return m_file.eof();
+    }
+
+    enum Permission
+    {
+        ReadOwner = 0x4000,
+        WriteOwner = 0x2000,
+        ReadUser = 0x400,
+        WriteUser = 0x200
+    };
+    enum FileTime
+    {
+        FileAccessTime,
+        FileBirthTime,
+        FileMetadataChangeTime,
+        FileModificationTime
+    };
+
+    static int permissions(const QString& name)
+    {
+        return 0;
+    }
+    static bool remove(const QString& name)
+    {
+        return std::remove(name.c_str()) == 0;
+    }
+    static bool copy(const QString& src, const QString& dst)
+    {
+        return false;
+    }
+
+    bool setFileTime(const QDateTime& newDate, FileTime time)
+    {
+        return true;
+    }
+    bool rename(const QString& newName)
+    {
+        return true;
+    }
+
+    static bool setPermissions(const QString& name, int permissions) { return true; }
+    bool setPermissions(int)
+    {
+        return true;
+    }
+    bool flush()
+    {
+        m_file.flush();
+        return m_file.good();
+    }
+    enum FileError { NoError = 0, ReadError = 1, WriteError = 2, FatalError = 3, ResourceError = 4, OpenError = 5, AbortError = 6, TimeOutError = 7, UnspecifiedError = 8, RemoveError = 9, RenameError = 10, PositionError = 11, ResizeError = 12, PermissionsError = 13, CopyError = 14 };
+    FileError error() const { return NoError; }
+    QString errorString() const override
+    {
+        return "";
+    }
+    bool remove()
+    {
+        return std::remove(m_name.c_str()) == 0;
+    }
+
+    static QString decodeName(const QByteArray& ba)
+    {
+        return QString(ba);
+    }
+    static QString decodeName(const char* s)
+    {
+        return QString(s);
+    }
+
+private:
+    QString m_name;
+    std::fstream m_file;
+    bool m_isOpen;
+};
+
+#endif

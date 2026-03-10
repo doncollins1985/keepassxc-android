@@ -1,0 +1,13 @@
+#ifndef QELAPSEDTIMER_H
+#define QELAPSEDTIMER_H
+
+#include "QtGlobal"
+
+class QElapsedTimer {
+public:
+    void start() {}
+    qint64 elapsed() const { return 0; }
+    bool hasExpired(qint64 timeout) const { return true; }
+};
+
+#endif

@@ -1,0 +1,155 @@
+#ifndef QDATETIME_H
+#define QDATETIME_H
+
+#include "QtGlobal"
+#include "QString"
+#include <chrono>
+#include <regex>
+
+class QDate {
+public:
+    QDate() : m_year(0), m_month(0), m_day(0) {}
+    QDate(int y, int m, int d) : m_year(y), m_month(m), m_day(d) {}
+    bool isValid() const { return m_year != 0; }
+private:
+    int m_year, m_month, m_day;
+};
+
+class QTime {
+public:
+    QTime() : m_h(0), m_m(0), m_s(0), m_ms(0) {}
+    QTime(int h, int m, int s, int ms = 0) : m_h(h), m_m(m), m_s(s), m_ms(ms) {}
+    bool isValid() const { return true; }
+    int msec() const { return m_ms; }
+private:
+    int m_h, m_m, m_s, m_ms;
+};
+
+class QDateTime {
+public:
+    QDateTime() : m_msecs(0) {}
+    QDateTime(const QDate& d, const QTime& t, Qt::TimeSpec spec = Qt::LocalTime) {
+        // Mock
+        m_msecs = std::time(nullptr) * 1000LL;
+    }
+    
+    static QDateTime currentDateTimeUtc() {
+        QDateTime dt;
+        dt.m_msecs = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count();
+        return dt;
+    }
+    
+    static QDateTime currentDateTime() {
+        return currentDateTimeUtc(); // Mock local as UTC
+    }
+    
+    static QDateTime fromMSecsSinceEpoch(long long msecs, Qt::TimeSpec spec = Qt::LocalTime) {
+        QDateTime dt;
+        dt.m_msecs = msecs;
+        return dt;
+    }
+    
+    static QDateTime fromString(const QString& s, Qt::DateFormat f = Qt::TextDate) {
+        if (s.isEmpty()) return QDateTime();
+        
+        std::string str = s.toStdString();
+        struct tm tm = {0};
+        
+        // Very basic ISO date parser: 2026-03-09T12:29:16Z
+        if (f == Qt::ISODate) {
+            int y, M, d, h, m, sec;
+            if (sscanf(str.c_str(), "%d-%d-%dT%d:%d:%d", &y, &M, &d, &h, &m, &sec) >= 6) {
+                tm.tm_year = y - 1900;
+                tm.tm_mon = M - 1;
+                tm.tm_mday = d;
+                tm.tm_hour = h;
+                tm.tm_min = m;
+                tm.tm_sec = sec;
+                time_t t = timegm(&tm);
+                if (t != (time_t)-1) return QDateTime::fromMSecsSinceEpoch(static_cast<long long>(t) * 1000LL);
+            }
+        }
+        return QDateTime();
+    }
+    static QDateTime fromString(const QString& s, const QString& f) { 
+        return QDateTime(); // Mock format parser
+    }
+    
+    long long toMSecsSinceEpoch() const { return m_msecs; }
+    unsigned int toTime_t() const { return static_cast<unsigned int>(m_msecs / 1000); }
+    int daysTo(const QDateTime& other) const { return (other.m_msecs - m_msecs) / 86400000LL; }
+    
+    bool isValid() const { return m_msecs != 0; }
+    bool isNull() const { return m_msecs == 0; }
+    QTime time() const { return QTime(); }
+    QDateTime addMSecs(long long ms) const {
+        QDateTime res = *this;
+        res.m_msecs += ms;
+        return res;
+    }
+    QDateTime addSecs(long long s) const {
+        return addMSecs(s * 1000);
+    }
+    qint64 secsTo(const QDateTime& other) const { 
+        return (other.m_msecs - m_msecs) / 1000LL; 
+    }
+    
+    QDateTime addDays(int days) const {
+        return addMSecs(days * 24LL * 3600LL * 1000LL);
+    }
+    
+    bool operator==(const QDateTime& other) const { return m_msecs == other.m_msecs; }
+    bool operator!=(const QDateTime& other) const { return m_msecs != other.m_msecs; }
+    bool operator<(const QDateTime& other) const { return m_msecs < other.m_msecs; }
+    bool operator>(const QDateTime& other) const { return m_msecs > other.m_msecs; }
+    bool operator<=(const QDateTime& other) const { return m_msecs <= other.m_msecs; }
+    bool operator>=(const QDateTime& other) const { return m_msecs >= other.m_msecs; }
+    
+    QString toString(Qt::DateFormat f = Qt::TextDate) const { 
+        if (m_msecs == 0) return QString();
+        time_t t = static_cast<time_t>(m_msecs / 1000);
+        struct tm* tm = gmtime(&t);
+        if (!tm) return QString();
+        
+        char buf[64];
+        if (f == Qt::ISODate) {
+            snprintf(buf, sizeof(buf), "%04d-%02d-%02dT%02d:%02d:%02dZ",
+                tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
+                tm->tm_hour, tm->tm_min, tm->tm_sec);
+            return QString(buf);
+        }
+        return QString("TODO: QDateTime toString"); 
+    }
+    
+    QString toString(const QString& format) const { 
+        if (m_msecs == 0) return QString();
+        time_t t = static_cast<time_t>(m_msecs / 1000);
+        struct tm* tm = gmtime(&t);
+        if (!tm) return QString();
+        
+        // Very basic mock replacement
+        std::string res = format.toStdString();
+        
+        char buf[32];
+        snprintf(buf, sizeof(buf), "%04d", tm->tm_year + 1900);
+        res = std::regex_replace(res, std::regex("yyyy"), buf);
+        snprintf(buf, sizeof(buf), "%02d", tm->tm_mon + 1);
+        res = std::regex_replace(res, std::regex("MM"), buf);
+        snprintf(buf, sizeof(buf), "%02d", tm->tm_mday);
+        res = std::regex_replace(res, std::regex("dd"), buf);
+        snprintf(buf, sizeof(buf), "%02d", tm->tm_hour);
+        res = std::regex_replace(res, std::regex("hh"), buf);
+        snprintf(buf, sizeof(buf), "%02d", tm->tm_min);
+        res = std::regex_replace(res, std::regex("mm"), buf);
+        snprintf(buf, sizeof(buf), "%02d", tm->tm_sec);
+        res = std::regex_replace(res, std::regex("ss"), buf);
+        
+        return QString(res.c_str()); 
+    }
+    
+private:
+    long long m_msecs;
+};
+
+#endif

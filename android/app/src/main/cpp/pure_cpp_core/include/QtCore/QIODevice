@@ -1,0 +1,70 @@
+#ifndef QIODEVICE_H
+#define QIODEVICE_H
+
+#include "QObject"
+#include "QByteArray"
+#include "QString"
+
+class QIODevice : public QObject {
+public:
+    enum OpenModeFlag {
+        NotOpen = 0x0000,
+        ReadOnly = 0x0001,
+        WriteOnly = 0x0002,
+        ReadWrite = ReadOnly | WriteOnly,
+        Append = 0x0004,
+        Truncate = 0x0008,
+        Text = 0x0010,
+        Unbuffered = 0x0020
+    };
+    Q_DECLARE_FLAGS(OpenMode, OpenModeFlag)
+
+    QIODevice(QObject* parent = nullptr) : QObject(parent) {}
+    virtual ~QIODevice() {}
+    virtual bool open(OpenMode mode) { return false; }
+    virtual void close() {}
+    virtual bool isOpen() const { return m_openMode != NotOpen; }
+    virtual qint64 size() const { return 0; }
+    virtual qint64 pos() const { return 0; }
+    virtual bool seek(qint64 pos) { return false; }
+    virtual bool atEnd() const { return true; }
+    virtual bool reset() { return seek(0); }
+    virtual qint64 bytesAvailable() const { return size() - pos(); }
+    virtual qint64 bytesToWrite() const { return 0; }
+    virtual bool isSequential() const { return false; }
+    virtual QString errorString() const { return m_errorString; }
+    
+    OpenMode openMode() const { return m_openMode; }
+    virtual void ungetChar(char c) {}
+    
+    bool isReadable() const { return m_openMode & ReadOnly; }
+    bool isWritable() const { return m_openMode & WriteOnly; }
+    void setErrorString(const QString& str) { m_errorString = str; }
+
+    virtual qint64 readData(char *data, qint64 maxlen) = 0;
+    virtual qint64 writeData(const char *data, qint64 len) { return 0; }
+
+    virtual QByteArray readAll() { 
+        return read(bytesAvailable());
+    }
+    virtual QByteArray read(qint64 maxlen) { 
+        QByteArray ba(static_cast<int>(maxlen), Qt::Uninitialized);
+        qint64 readLen = read(ba.data(), maxlen);
+        if (readLen < maxlen) ba.resize(static_cast<int>(readLen));
+        return ba;
+    }
+    virtual qint64 read(char* data, qint64 maxlen) { 
+        return readData(data, maxlen);
+    }
+    virtual qint64 write(const QByteArray &data) { return write(data.data(), data.size()); }
+    virtual qint64 write(const char* data, qint64 len) { return writeData(data, len); }
+    virtual QByteArray peek(int len) { return QByteArray(); }
+
+protected:
+    OpenMode m_openMode = NotOpen;
+    QString m_errorString = "";
+};
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QIODevice::OpenMode)
+
+#endif

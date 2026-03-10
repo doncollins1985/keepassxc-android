@@ -1,0 +1,22 @@
+#ifndef QSTRINGREF_H
+#define QSTRINGREF_H
+
+#include "QString"
+
+class QStringRef {
+public:
+    QStringRef() {}
+    QStringRef(const QString* string, int position, int length) {}
+    QStringRef(const QString& str) : m_str(str) {}
+    bool isEmpty() const { return true; }
+    QByteArray toLatin1() const { return QByteArray(); }
+    QString toString() const { return m_str; }
+    int compare(const QString& other, Qt::CaseSensitivity cs = Qt::CaseSensitive) const { return 0; }
+    int compare(const char* other, Qt::CaseSensitivity cs = Qt::CaseSensitive) const { return 0; }
+    bool operator==(const char* other) const { return false; }
+    bool operator!=(const char* other) const { return true; }
+private:
+    QString m_str;
+};
+
+#endif

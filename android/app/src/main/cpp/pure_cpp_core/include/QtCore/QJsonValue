@@ -1,0 +1,20 @@
+#ifndef QJSONVALUE_H
+#define QJSONVALUE_H
+
+#include "QString"
+#include "QVariant"
+
+class QJsonValue {
+public:
+    QJsonValue() {}
+    QJsonValue(int) {}
+    QJsonValue(bool) {}
+    QJsonValue(double) {}
+    QJsonValue(const QString&) {}
+    QVariant toVariant() const { return QVariant(); }
+    QString toString() const { return QString(); }
+    int toInt() const { return 0; }
+    bool toBool() const { return false; }
+};
+
+#endif

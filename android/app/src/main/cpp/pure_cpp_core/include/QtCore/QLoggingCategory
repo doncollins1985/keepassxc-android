@@ -1,0 +1,15 @@
+#ifndef QLOGGINGCATEGORY_H
+#define QLOGGINGCATEGORY_H
+
+#include "QtGlobal"
+
+class QLoggingCategory {
+public:
+    QLoggingCategory(const char*) {}
+    bool isDebugEnabled() const { return true; }
+};
+
+#define Q_DECLARE_LOGGING_CATEGORY(name) extern QLoggingCategory name();
+#define Q_LOGGING_CATEGORY(name, string) QLoggingCategory name() { static QLoggingCategory cat(string); return cat; }
+
+#endif

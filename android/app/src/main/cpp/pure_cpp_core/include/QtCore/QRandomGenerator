@@ -1,0 +1,43 @@
+#ifndef QRANDOMGENERATOR_H
+#define QRANDOMGENERATOR_H
+
+#include "QtGlobal"
+#include "botan/rng.h"
+
+class QRandomGenerator {
+public:
+    static QRandomGenerator* global() { static QRandomGenerator gen; return &gen; }
+    static QRandomGenerator* securelySeeded() { return global(); }
+    uint32_t generate()
+    {
+        uint32_t value = 0;
+        Botan::secure_random_fill(reinterpret_cast<uint8_t*>(&value), sizeof(value));
+        return value;
+    }
+
+    uint64_t generate64()
+    {
+        uint64_t value = 0;
+        Botan::secure_random_fill(reinterpret_cast<uint8_t*>(&value), sizeof(value));
+        return value;
+    }
+
+    void fillRange(uint32_t* begin, uint32_t* end)
+    {
+        if (!begin || !end || end < begin) {
+            return;
+        }
+        Botan::secure_random_fill(reinterpret_cast<uint8_t*>(begin),
+                                  static_cast<size_t>(end - begin) * sizeof(uint32_t));
+    }
+
+    void fillRange(uint8_t* begin, int len)
+    {
+        if (!begin || len <= 0) {
+            return;
+        }
+        Botan::secure_random_fill(begin, static_cast<size_t>(len));
+    }
+};
+
+#endif

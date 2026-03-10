@@ -1,0 +1,15 @@
+#ifndef QPROCESSENVIRONMENT_H
+#define QPROCESSENVIRONMENT_H
+
+#include "QtGlobal"
+#include "QString"
+
+class QProcessEnvironment {
+public:
+    static QProcessEnvironment systemEnvironment() { return QProcessEnvironment(); }
+    QString value(const QString& name, const QString& defaultValue = QString()) const {
+        return defaultValue;
+    }
+};
+
+#endif

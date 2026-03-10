@@ -1,0 +1,36 @@
+#ifndef QFUTUREWATCHER_H
+#define QFUTUREWATCHER_H
+
+#include "QObject"
+
+template <typename T>
+class QFuture {
+    T m_result;
+public:
+    QFuture() = default;
+    QFuture(const T& res) : m_result(res) {}
+    bool isFinished() const { return true; }
+    T result() const { return m_result; }
+};
+
+template <>
+class QFuture<void> {
+public:
+    QFuture() = default;
+    bool isFinished() const { return true; }
+    void result() const {}
+};
+
+class QFutureWatcherBase : public QObject {
+    Q_OBJECT
+public:
+    void finished() {} // Signal
+};
+
+template <typename T>
+class QFutureWatcher : public QFutureWatcherBase {
+public:
+    void setFuture(const QFuture<T>& future) {}
+};
+#include "QEventLoop"
+#endif

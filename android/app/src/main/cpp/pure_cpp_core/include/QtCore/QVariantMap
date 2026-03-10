@@ -1,0 +1,16 @@
+#ifndef QVARIANTMAP_H
+#define QVARIANTMAP_H
+
+#include "QMap"
+#include "QString"
+#include "QVariant"
+#include <map>
+
+typedef QMap<QString, QVariant> QVariantMap;
+
+inline QMap<QString, QVariant> toMap()
+{
+    return QMap<QString, QVariant>();
+}
+
+#endif

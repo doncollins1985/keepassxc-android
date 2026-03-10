@@ -1,0 +1,45 @@
+#ifndef QVECTOR_H
+#define QVECTOR_H
+
+#include "QtGlobal"
+
+template <typename T>
+class QVector : public std::vector<T> {
+public:
+    QVector() {}
+    QVector(int size) : std::vector<T>(size) {}
+    QVector(int size, const T& value) : std::vector<T>(size, value) {}
+    template <typename InputIt>
+    QVector(InputIt first, InputIt last) : std::vector<T>(first, last) {}
+    
+    void append(const T& t) { this->push_back(t); }
+    int size() const { return static_cast<int>(std::vector<T>::size()); }
+    bool isEmpty() const { return this->empty(); }
+    
+    bool contains(const T& t) const {
+        return std::find(this->begin(), this->end(), t) != this->end();
+    }
+    
+    int indexOf(const T& t, int from = 0) const {
+        if (from < 0) from = std::max(0, static_cast<int>(size()) + from);
+        if (from >= static_cast<int>(size())) return -1;
+        auto it = std::find(this->begin() + from, this->end(), t);
+        return (it != this->end()) ? static_cast<int>(std::distance(this->begin(), it)) : -1;
+    }
+    
+    void remove(int i) {
+        if (i >= 0 && i < static_cast<int>(size())) {
+            this->erase(this->begin() + i);
+        }
+    }
+    
+    void removeAt(int i) { remove(i); }
+    
+    void replace(int i, const T& t) {
+        if (i >= 0 && i < static_cast<int>(size())) {
+            (*this)[i] = t;
+        }
+    }
+};
+
+#endif

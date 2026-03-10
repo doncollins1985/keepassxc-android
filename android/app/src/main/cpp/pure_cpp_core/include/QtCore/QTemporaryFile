@@ -1,0 +1,15 @@
+#ifndef QTEMPORARYFILE_H
+#define QTEMPORARYFILE_H
+
+#include "QFile"
+
+class QTemporaryFile : public QFile {
+public:
+    QTemporaryFile() : QFile("/tmp/temp") {}
+    QTemporaryFile(const QString& templateName) : QFile(templateName + "_XXXXXX") {}
+    bool open() { return QFile::open(QIODevice::ReadWrite); }
+    QString fileName() const { return QFile::fileName(); }
+    void setAutoRemove(bool) {}
+};
+
+#endif

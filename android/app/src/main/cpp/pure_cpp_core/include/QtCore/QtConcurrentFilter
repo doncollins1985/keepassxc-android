@@ -1,0 +1,6 @@
+#ifndef QTCONCURRENTFILTER_H
+#define QTCONCURRENTFILTER_H
+
+#include "QtConcurrent"
+
+#endif

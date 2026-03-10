@@ -1,0 +1,299 @@
+#ifndef Q_GLOBAL_H
+#define Q_GLOBAL_H
+
+#include <algorithm>
+#include <climits>
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
+#include <initializer_list>
+#include <map>
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+
+// Forward declarations at the top
+class QString;
+class QByteArray;
+class QUuid;
+class QVariant;
+class QRegularExpression;
+class QRegularExpressionMatch;
+template <typename T> class QList;
+template <typename K, typename V> class QMap;
+typedef QMap<QString, QVariant> QVariantMap;
+
+typedef int8_t qint8;
+typedef uint8_t quint8;
+typedef int16_t qint16;
+typedef uint16_t quint16;
+typedef int32_t qint32;
+typedef uint32_t quint32;
+typedef int64_t qint64;
+typedef uint64_t quint64;
+
+#define Q_REQUIRED_RESULT
+#define Q_ASSERT(cond)
+#define Q_ASSERT_X(cond, where, what)
+#define Q_UNUSED(x) (void)x;
+#define QStringLiteral(s) QString(s)
+#define Q_DECLARE_TYPEINFO(Type, Flags)
+#define Q_MOVABLE_TYPE 0
+#define Q_DECLARE_PRIVATE(Class)
+#define Q_DISABLE_COPY(Class)
+
+#define QT_VERSION_CHECK(major, minor, patch) ((major << 16) | (minor << 8) | (patch))
+#define QT_VERSION QT_VERSION_CHECK(5, 15, 2)
+#define QT_TRANSLATE_NOOP(context, sourceText) sourceText
+
+template <typename T> void qDeleteAll(const T& container)
+{
+    for (auto const& item : container)
+        delete item;
+}
+
+template <typename T> const T& asConst(const T& t)
+{
+    return t;
+}
+
+template <typename T> const T& qBound(const T& min, const T& val, const T& max)
+{
+    return std::max(min, std::min(val, max));
+}
+
+namespace Qt
+{
+    enum ToolButtonStyle
+    {
+        ToolButtonIconOnly,
+        ToolButtonTextOnly,
+        ToolButtonTextBesideIcon,
+        ToolButtonTextUnderIcon,
+        ToolButtonFollowStyle
+    };
+    enum ConnectionType
+    {
+        AutoConnection,
+        DirectConnection,
+        QueuedConnection,
+        BlockingQueuedConnection,
+        UniqueConnection = 0x80
+    };
+    enum Initialization
+    {
+        Uninitialized
+    };
+    enum SortOrder
+    {
+        AscendingOrder,
+        DescendingOrder
+    };
+    enum DateFormat
+    {
+        TextDate,
+        ISODate
+    };
+    enum TimeSpec
+    {
+        UTC,
+        LocalTime
+    };
+    enum CaseSensitivity
+    {
+        CaseInsensitive = 0,
+        CaseSensitive = 1
+    };
+    enum SplitBehavior
+    {
+        KeepEmptyParts,
+        SkipEmptyParts
+    };
+    enum ItemSelectionMode
+    {
+        ContainsItemShape,
+        IntersectsItemShape,
+        ContainsItemBoundingRect,
+        IntersectsItemBoundingRect
+    };
+    enum MatchFlag
+    {
+        MatchExactly,
+        MatchContains,
+        MatchStartsWith,
+        MatchEndsWith,
+        MatchRegExp,
+        MatchWildcard,
+        MatchFixedString,
+        MatchCaseSensitive,
+        MatchWrap,
+        MatchRecursive
+    };
+
+    typedef int MatchFlags;
+    enum FindChildOption
+    {
+        FindDirectChildrenOnly = 0x0,
+        FindChildrenRecursively = 0x1
+    };
+    typedef int FindChildOptions;
+    enum ShortcutContext
+    {
+        WidgetShortcut,
+        WidgetWithChildrenShortcut,
+        WindowShortcut,
+        ApplicationShortcut
+    };
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    enum ItemDataRole
+    {
+        DisplayRole = 0,
+        DecorationRole = 1,
+        EditRole = 2,
+        ToolTipRole = 3,
+        StatusTipRole = 4,
+        WhatsThisRole = 5,
+        FontRole = 6,
+        TextAlignmentRole = 7,
+        BackgroundRole = 8,
+        ForegroundRole = 9,
+        CheckStateRole = 10,
+        AccessibleTextRole = 11,
+        AccessibleDescriptionRole = 12,
+        SizeHintRole = 13,
+        InitialSortOrderRole = 14,
+        DisplayPropertyRole = 27,
+        DecorationPropertyRole = 28,
+        ToolTipPropertyRole = 29,
+        StatusTipPropertyRole = 30,
+        WhatsThisPropertyRole = 31,
+        UserRole = 0x0100
+    };
+#endif
+    enum ItemFlag
+    {
+        NoItemFlags = 0,
+        ItemIsSelectable = 1,
+        ItemIsEditable = 2,
+        ItemIsDragEnabled = 4,
+        ItemIsDropEnabled = 8,
+        ItemIsUserCheckable = 16,
+        ItemIsEnabled = 32,
+        ItemIsAutoTristate = 64,
+        ItemNeverHasChildren = 128,
+        ItemIsUserTristate = 256
+    };
+    typedef int ItemFlags;
+} // namespace Qt
+
+#define Q_DECLARE_FLAGS(Flags, Enum)                                                                                   \
+    struct Flags                                                                                                       \
+    {                                                                                                                  \
+        int val;                                                                                                       \
+        Flags(int v = 0)                                                                                               \
+            : val(v)                                                                                                   \
+        {                                                                                                              \
+        }                                                                                                              \
+        bool testFlag(Enum f) const                                                                                    \
+        {                                                                                                              \
+            return (val & f) == f;                                                                                     \
+        }                                                                                                              \
+        operator int() const                                                                                           \
+        {                                                                                                              \
+            return val;                                                                                                \
+        }                                                                                                              \
+    };
+
+#define Q_DECLARE_OPERATORS_FOR_FLAGS(Flags)
+
+#define Q_DECLARE_TR_FUNCTIONS(context)                                                                                \
+    static QString tr(const char* s, const char* c = nullptr, int n = -1)                                              \
+    {                                                                                                                  \
+        return QString(s);                                                                                             \
+    }
+
+#define Q_D(Class) Class##Private* const d = d_ptr;
+#define Q_Q(Class) Class* const q = q_ptr;
+
+#define emit
+
+#define SIGNAL(s) #s
+#define SLOT(s) #s
+
+#define qPrintable(s) s.c_str()
+
+struct QDebugMock {
+    template <typename T> QDebugMock& operator<<(const T&) { return *this; }
+    QDebugMock& operator<<(const char*) { return *this; }
+    QDebugMock& operator<<(int) { return *this; }
+};
+inline QDebugMock qWarning() { return QDebugMock(); }
+inline QDebugMock qDebug() { return QDebugMock(); }
+inline QDebugMock qCritical() { return QDebugMock(); }
+inline QDebugMock qInfo() { return QDebugMock(); }
+
+inline void qWarning(const char*, ...) {}
+inline void qDebug(const char*, ...) {}
+inline void qCritical(const char*, ...) {}
+inline void qInfo(const char*, ...) {}
+
+template <typename T1, typename T2> using QPair = std::pair<T1, T2>;
+
+template <typename T1, typename T2> QPair<T1, T2> qMakePair(T1 t1, T2 t2)
+{
+    return std::make_pair(t1, t2);
+}
+
+template <typename T> class QScopedPointer : public std::unique_ptr<T>
+{
+public:
+    using std::unique_ptr<T>::unique_ptr;
+    QScopedPointer(T* p = nullptr)
+        : std::unique_ptr<T>(p)
+    {
+    }
+    void reset(T* ptr = nullptr)
+    {
+        std::unique_ptr<T>::reset(ptr);
+    }
+    T* data() const
+    {
+        return std::unique_ptr<T>::get();
+    }
+    T* take()
+    {
+        return std::unique_ptr<T>::release();
+    }
+};
+
+class QSysInfo
+{
+public:
+    enum Endian
+    {
+        BigEndian,
+        LittleEndian
+    };
+    static const Endian ByteOrder = LittleEndian;
+    
+    static const char* prettyProductName() { return "Android"; }
+    static const char* currentCpuArchitecture() { return "arm64"; }
+    static const char* kernelType() { return "linux"; }
+    static const char* kernelVersion() { return "x.y.z"; }
+};
+
+template <typename T> const T& qMin(const T& a, const T& b) { return (a < b) ? a : b; }
+template <typename T> const T& qMax(const T& a, const T& b) { return (a > b) ? a : b; }
+typedef unsigned char uchar;
+typedef unsigned short ushort;
+inline const char* qVersion() { return "5.15.2"; }
+
+#define Q_FOREACH(variable, container) for (variable : container)
+#define foreach Q_FOREACH
+
+#endif
+

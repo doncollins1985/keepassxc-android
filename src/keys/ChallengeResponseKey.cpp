@@ -17,6 +17,8 @@
  */
 
 #include "ChallengeResponseKey.h"
+#include <QDataStream>
+#include <QIODevice>
 
 #include "core/AsyncTask.h"
 

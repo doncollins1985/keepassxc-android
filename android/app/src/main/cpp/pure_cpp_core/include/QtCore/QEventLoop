@@ -1,0 +1,8 @@
+#ifndef QEVENTLOOP_H
+#define QEVENTLOOP_H
+class QEventLoop {
+public:
+    enum ProcessEventsFlag { AllEvents = 0x00, ExcludeUserInputEvents = 0x01, ExcludeSocketNotifiers = 0x02, WaitForMoreEvents = 0x04 };
+    int exec() { return 0; }
+};
+#endif

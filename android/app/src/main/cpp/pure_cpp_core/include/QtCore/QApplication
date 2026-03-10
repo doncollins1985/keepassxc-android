@@ -1,0 +1,11 @@
+#ifndef QAPPLICATION_H
+#define QAPPLICATION_H
+
+#include "QCoreApplication"
+
+class QApplication : public QCoreApplication {
+public:
+    static void processEvents() {}
+};
+
+#endif

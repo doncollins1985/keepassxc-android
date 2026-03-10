@@ -17,6 +17,7 @@
  */
 
 #include "Crypto.h"
+#include <QObject>
 
 #include "config-keepassx.h"
 

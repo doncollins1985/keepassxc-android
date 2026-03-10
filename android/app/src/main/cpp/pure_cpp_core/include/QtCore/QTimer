@@ -1,0 +1,14 @@
+#ifndef QTIMER_H
+#define QTIMER_H
+#include "QObject"
+class QTimer : public QObject {
+public:
+    QTimer(QObject* parent = nullptr) : QObject(parent) {}
+    void start(int) {}
+    void stop() {}
+    void setSingleShot(bool) {}
+    bool isActive() const { return false; }
+    static void singleShot(int, QObject*, const char*) {}
+    void timeout();
+};
+#endif

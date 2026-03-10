@@ -1,0 +1,4 @@
+#ifndef QSYSINFO_H
+#define QSYSINFO_H
+#include "QtGlobal"
+#endif

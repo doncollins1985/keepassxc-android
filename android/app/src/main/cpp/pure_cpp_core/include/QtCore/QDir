@@ -1,0 +1,30 @@
+#ifndef QDIR_H
+#define QDIR_H
+
+#include "QtGlobal"
+#include "QString"
+
+class QDir {
+public:
+    static QString homePath() { return "/sdcard"; } 
+    static QString separator() { return "/"; }
+    static QDir temp() { return QDir(); }
+    static QString tempPath() { return "/tmp"; }
+    QString absoluteFilePath(const QString& name) const { return tempPath() + "/" + name; }
+    QString absolutePath() const { return "/"; }
+    bool exists() const { return true; }
+    bool mkpath(const QString& path) const { return true; }
+    bool rmdir(const QString& path) const { return true; }
+    static QString fromNativeSeparators(const QString& pathName) {
+        QString res = pathName;
+        res.replace("\\", "/");
+        return res;
+    }
+    static QString toNativeSeparators(const QString& pathName) {
+        QString res = pathName;
+        res.replace("/", "\\"); // Just a mock
+        return res;
+    }
+};
+#include "QFileInfo"
+#endif

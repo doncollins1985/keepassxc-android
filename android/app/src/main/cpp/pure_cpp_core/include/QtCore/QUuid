@@ -1,0 +1,94 @@
+#ifndef QUUID_H
+#define QUUID_H
+
+#include "QtGlobal"
+#include <array>
+#include "QByteArray"
+#include "QString"
+#include <iomanip>
+#include <sstream>
+#include <algorithm>
+
+#include "QRandomGenerator"
+
+class QUuid {
+public:
+    QUuid() { std::fill(m_data.begin(), m_data.end(), 0); }
+    QUuid(const char* hex) {
+        *this = fromHex(hex);
+    }
+    
+    static QUuid createUuid() {
+        QUuid uuid;
+        QRandomGenerator::global()->fillRange(uuid.m_data.data(), 16);
+        // Set variant and version for RFC 4122 v4
+        uuid.m_data[6] = (uuid.m_data[6] & 0x0f) | 0x40; // Version 4
+        uuid.m_data[8] = (uuid.m_data[8] & 0x3f) | 0x80; // Variant 1
+        return uuid;
+    }
+
+    static QUuid fromHex(const char* hex) {
+        QUuid uuid;
+        std::string s(hex);
+        s.erase(std::remove(s.begin(), s.end(), '{'), s.end());
+        s.erase(std::remove(s.begin(), s.end(), '}'), s.end());
+        s.erase(std::remove(s.begin(), s.end(), '-'), s.end());
+        
+        for (size_t i = 0; i < 16 && i * 2 < s.length(); ++i) {
+            std::string part = s.substr(i * 2, 2);
+            uuid.m_data[i] = static_cast<uint8_t>(std::stoul(part, nullptr, 16));
+        }
+        return uuid;
+    }
+
+    static QUuid fromRfc4122(const QByteArray& data) {
+        QUuid uuid;
+        const char* d = data.constData();
+        for (int i = 0; i < 16 && i < data.size(); ++i) {
+            uuid.m_data[i] = static_cast<uint8_t>(d[i]);
+        }
+        return uuid;
+    }
+
+    QByteArray toRfc4122() const {
+        return QByteArray(reinterpret_cast<const char*>(m_data.data()), 16);
+    }
+
+    QString toString() const {
+        std::stringstream ss;
+        ss << "{" << std::hex << std::setfill('0');
+        for (int i = 0; i < 16; ++i) {
+            ss << std::setw(2) << static_cast<int>(m_data[i]);
+            if (i == 3 || i == 5 || i == 7 || i == 9) ss << "-";
+        }
+        ss << "}";
+        return QString::fromStdString(ss.str());
+    }
+
+    bool operator==(const QUuid& other) const { return m_data == other.m_data; }
+    bool operator!=(const QUuid& other) const { return m_data != other.m_data; }
+    bool operator<(const QUuid& other) const { return m_data < other.m_data; }
+    
+    bool isNull() const {
+        for (uint8_t b : m_data) if (b != 0) return false;
+        return true;
+    }
+    
+    const std::array<uint8_t, 16>& data() const { return m_data; }
+    
+private:
+    std::array<uint8_t, 16> m_data;
+};
+
+namespace std {
+    template <>
+    struct hash<QUuid> {
+        size_t operator()(const QUuid& u) const {
+            size_t h = 0;
+            for (uint8_t b : u.data()) h = h * 31 + b;
+            return h;
+        }
+    };
+}
+
+#endif

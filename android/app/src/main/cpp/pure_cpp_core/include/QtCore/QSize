@@ -1,0 +1,26 @@
+#ifndef QSIZE_H
+#define QSIZE_H
+
+#include "QtGlobal"
+
+class QSize {
+public:
+    QSize() : m_w(-1), m_h(-1) {}
+    QSize(int w, int h) : m_w(w), m_h(h) {}
+    
+    int width() const { return m_w; }
+    int height() const { return m_h; }
+    void setWidth(int w) { m_w = w; }
+    void setHeight(int h) { m_h = h; }
+    
+    bool isValid() const { return m_w >= 0 && m_h >= 0; }
+    bool isEmpty() const { return m_w <= 0 || m_h <= 0; }
+    
+    bool operator==(const QSize& other) const { return m_w == other.m_w && m_h == other.m_h; }
+    bool operator!=(const QSize& other) const { return !(*this == other); }
+
+private:
+    int m_w, m_h;
+};
+
+#endif

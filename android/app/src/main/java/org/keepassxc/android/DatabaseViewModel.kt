@@ -1,0 +1,193 @@
+package org.keepassxc.android
+
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
+import android.util.Log
+import org.keepassxc.android.models.Entry
+import org.keepassxc.android.models.EntryDetails
+
+class DatabaseViewModel : ViewModel() {
+    private var dbPtr: Long = 0
+    
+    var isUnlocked by mutableStateOf(false)
+        private set
+        
+    var rootGroupName by mutableStateOf("")
+        private set
+
+    var entries by mutableStateOf<List<Entry>>(emptyList())
+        private set
+
+    var selectedEntry by mutableStateOf<EntryDetails?>(null)
+        private set
+
+    var lastError by mutableStateOf<String?>(null)
+        private set
+
+    var currentUri: android.net.Uri? = null
+        private set
+
+    fun unlock(filePath: String, password: String, useYubiKey: Boolean) {
+        if (isUnlocked) {
+            close()
+        }
+        
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val ptr = NativeCore.openDatabase(filePath, password, useYubiKey)
+            handleUnlockResult(ptr)
+        }
+    }
+
+    fun unlockFromUri(contentResolver: android.content.ContentResolver, uri: android.net.Uri, password: String, keyfileUri: android.net.Uri?, useYubiKey: Boolean) {
+        if (isUnlocked) {
+            close()
+        }
+        
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                var keyfileBytes: ByteArray? = null
+                if (keyfileUri != null) {
+                    contentResolver.openInputStream(keyfileUri)?.use {
+                        keyfileBytes = it.readBytes()
+                    }
+                }
+                
+                contentResolver.openInputStream(uri)?.use { inputStream ->
+                    val bytes = inputStream.readBytes()
+                    val ptr = NativeCore.openDatabaseFromBytes(bytes, password, keyfileBytes, useYubiKey)
+                    if (ptr != 0L) {
+                        currentUri = uri
+                    }
+                    handleUnlockResult(ptr)
+                } ?: run {
+                    lastError = "Could not open file."
+                }
+            } catch (e: Exception) {
+                lastError = "Error reading file: ${e.message}"
+                Log.e("DatabaseViewModel", "Error reading URI", e)
+            }
+        }
+    }
+
+    fun createDatabase(contentResolver: android.content.ContentResolver, uri: android.net.Uri, password: String, keyfileUri: android.net.Uri?, useYubiKey: Boolean) {
+        if (isUnlocked) {
+            close()
+        }
+
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                var keyfileBytes: ByteArray? = null
+                if (keyfileUri != null) {
+                    contentResolver.openInputStream(keyfileUri)?.use {
+                        keyfileBytes = it.readBytes()
+                    }
+                }
+                val ptr = NativeCore.createDatabase(password, keyfileBytes, useYubiKey)
+                if (ptr != 0L) {
+                    currentUri = uri
+                    handleUnlockResult(ptr)
+                    saveDatabase(contentResolver)
+                } else {
+                    lastError = "Could not create database."
+                }
+            } catch (e: Exception) {
+                lastError = "Error creating database: ${e.message}"
+                Log.e("DatabaseViewModel", "Error creating DB", e)
+            }
+        }
+    }
+
+    private fun handleUnlockResult(ptr: Long) {
+        if (ptr != 0L) {
+            dbPtr = ptr
+            isUnlocked = true
+            rootGroupName = NativeCore.getRootGroupName(dbPtr)
+            entries = NativeCore.getEntries(dbPtr)
+            lastError = null
+            Log.i("DatabaseViewModel", "Database unlocked: $rootGroupName with ${entries.size} entries")
+        } else {
+            isUnlocked = false
+            lastError = "Failed to unlock database. Check password."
+            Log.e("DatabaseViewModel", "Failed to unlock database")
+        }
+    }
+
+    fun selectEntry(uuid: String?) {
+        if (uuid == null) {
+            selectedEntry = null
+        } else if (dbPtr != 0L) {
+            selectedEntry = NativeCore.getEntryDetails(dbPtr, uuid)
+        }
+    }
+
+    fun addEntry(title: String, username: String, password: String, url: String, notes: String): String? {
+        if (dbPtr != 0L) {
+            val uuid = NativeCore.addEntry(dbPtr, title, username, password, url, notes)
+            if (uuid.isNotEmpty()) {
+                refreshEntries()
+                return uuid
+            }
+        }
+        return null
+    }
+
+    fun updateEntry(uuid: String, title: String, username: String, password: String, url: String, notes: String): Boolean {
+        if (dbPtr != 0L) {
+            val success = NativeCore.updateEntry(dbPtr, uuid, title, username, password, url, notes)
+            if (success) {
+                refreshEntries()
+                if (selectedEntry?.uuid == uuid) {
+                    selectEntry(uuid) // Refresh selected entry details
+                }
+                return true
+            }
+        }
+        return false
+    }
+
+    fun saveDatabase(contentResolver: android.content.ContentResolver) {
+        if (dbPtr == 0L || currentUri == null) return
+        
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val bytes = NativeCore.saveDatabaseAsBytes(dbPtr)
+            if (bytes != null) {
+                try {
+                    contentResolver.openOutputStream(currentUri!!, "wt")?.use { outputStream ->
+                        outputStream.write(bytes)
+                        Log.i("DatabaseViewModel", "Database saved to URI successfully.")
+                    }
+                } catch (e: Exception) {
+                    Log.e("DatabaseViewModel", "Failed to save database to URI", e)
+                }
+            } else {
+                Log.e("DatabaseViewModel", "saveDatabaseAsBytes returned null, file not truncated.")
+            }
+        }
+    }
+
+    private fun refreshEntries() {
+        if (dbPtr != 0L) {
+            entries = NativeCore.getEntries(dbPtr)
+        }
+    }
+
+    fun close() {
+        if (dbPtr != 0L) {
+            NativeCore.closeDatabase(dbPtr)
+            dbPtr = 0
+            isUnlocked = false
+            rootGroupName = ""
+            entries = emptyList()
+            selectedEntry = null
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        close()
+    }
+}

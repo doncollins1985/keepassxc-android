@@ -1,0 +1,6 @@
+#ifndef QSCOPEDPOINTER_H
+#define QSCOPEDPOINTER_H
+
+#include "QtGlobal"
+
+#endif

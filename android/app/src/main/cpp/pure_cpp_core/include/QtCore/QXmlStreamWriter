@@ -1,0 +1,27 @@
+#ifndef QXMLSTREAMWRITER_H
+#define QXMLSTREAMWRITER_H
+#include "QIODevice"
+#include "QString"
+class QXmlStreamWriter {
+public:
+    QXmlStreamWriter() {}
+    QXmlStreamWriter(QIODevice*) {}
+    QXmlStreamWriter(QString*) {}
+    QXmlStreamWriter(QByteArray*) {}
+    void setDevice(QIODevice*) {}
+    void setAutoFormatting(bool) {}
+    void setAutoFormattingIndent(int) {}
+    void setCodec(const char*) {}
+    void writeStartDocument() {}
+    void writeStartDocument(const QString&, bool) {}
+    void writeEndDocument() {}
+    void writeStartElement(const QString&) {}
+    void writeEndElement() {}
+    void writeCharacters(const QString&) {}
+    void writeAttribute(const QString&, const QString&) {}
+    void writeEmptyElement(const QString&) {}
+    void writeTextElement(const QString&, const QString&) {}
+    void writeCDATA(const QString&) {}
+    bool hasError() const { return false; }
+};
+#endif

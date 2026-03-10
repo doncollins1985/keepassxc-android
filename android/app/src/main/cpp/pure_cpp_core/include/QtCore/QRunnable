@@ -1,0 +1,19 @@
+#ifndef QRUNNABLE_H
+#define QRUNNABLE_H
+
+#include "QtGlobal"
+
+class QRunnable {
+public:
+    virtual ~QRunnable() {}
+    virtual void run() = 0;
+    void setAutoDelete(bool autoDelete) {}
+};
+
+class QThreadPool {
+public:
+    static QThreadPool* globalInstance() { static QThreadPool pool; return &pool; }
+    void start(QRunnable* runnable) { runnable->run(); }
+};
+
+#endif

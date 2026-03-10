@@ -1,0 +1,10 @@
+#ifndef QMULTIMAP_H
+#define QMULTIMAP_H
+#include "QMap"
+template<typename K, typename V>
+class QMultiMap : public QMap<K, V> {
+public:
+    void insert(const K& key, const V& value) { QMap<K, V>::insert(key, value); }
+    QList<V> values(const K& key) const { return QList<V>(); }
+};
+#endif

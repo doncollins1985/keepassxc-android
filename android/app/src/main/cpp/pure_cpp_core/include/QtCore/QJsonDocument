@@ -1,0 +1,64 @@
+#ifndef QJSONDOCUMENT_H
+#define QJSONDOCUMENT_H
+
+#include "QByteArray"
+#include "QString"
+#include "QVariant"
+#include "QtGlobal"
+
+class QJsonValue
+{
+public:
+    bool isString() const
+    {
+        return true;
+    }
+    QString toString() const
+    {
+        return "";
+    }
+    QVariant toVariant() const
+    {
+        return QVariant();
+    }
+};
+
+class QJsonObject
+{
+public:
+    QJsonValue value(const QString& key) const
+    {
+        return QJsonValue();
+    }
+};
+
+class QJsonArray
+{
+};
+
+class QJsonDocument
+{
+public:
+    static QJsonDocument fromJson(const QByteArray& data)
+    {
+        return QJsonDocument();
+    }
+    static QJsonDocument fromVariant(const QVariant& variant)
+    {
+        return QJsonDocument();
+    }
+    QJsonObject object() const
+    {
+        return QJsonObject();
+    }
+    QVariant toVariant() const
+    {
+        return QVariant();
+    }
+    QByteArray toJson() const
+    {
+        return QByteArray();
+    }
+};
+
+#endif

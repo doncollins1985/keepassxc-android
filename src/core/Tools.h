@@ -20,6 +20,7 @@
 #define KEEPASSX_TOOLS_H
 
 #include "core/Global.h"
+#include <QObject>
 
 #include <QDateTime>
 #include <QFileInfo>

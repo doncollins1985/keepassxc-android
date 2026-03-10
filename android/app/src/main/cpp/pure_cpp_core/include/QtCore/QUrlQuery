@@ -1,0 +1,19 @@
+#ifndef QURLQUERY_H
+#define QURLQUERY_H
+
+#include "QString"
+#include "QList"
+#include "QtGlobal"
+
+class QUrlQuery {
+public:
+    QUrlQuery() {}
+    QUrlQuery(const QString& url) {}
+    QUrlQuery(const QUrl& url) {}
+    void addQueryItem(const QString& key, const QString& value) {}
+    QString queryItemValue(const QString& key) const { return QString(); }
+    bool hasQueryItem(const QString& key) const { return false; }
+    QList<QPair<QString, QString>> queryItems() const { return {}; }
+};
+
+#endif

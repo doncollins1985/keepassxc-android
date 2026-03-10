@@ -1,0 +1,64 @@
+#ifndef QFILEINFO_H
+#define QFILEINFO_H
+
+#include "QDateTime"
+#include "QDir"
+#include "QString"
+
+class QFileInfo
+{
+public:
+    QFileInfo(const QString& file)
+        : m_file(file)
+    {
+    }
+    bool exists() const
+    {
+        return true;
+    } // Mock
+    bool isWritable() const
+    {
+        return true;
+    }
+    QString absoluteFilePath() const
+    {
+        return m_file;
+    }
+    QString fileName() const
+    {
+        return m_file;
+    }
+    bool isDir() const
+    {
+        return false;
+    }
+    QString absolutePath() const
+    {
+        return m_file;
+    }
+    long long size() const
+    {
+        return 0;
+    }
+    QDir absoluteDir() const
+    {
+        return QDir();
+    }
+    QString canonicalFilePath() const
+    {
+        return absoluteFilePath();
+    }
+    QString completeBaseName() const
+    {
+        return "";
+    }
+    QDateTime birthTime() const
+    {
+        return QDateTime::currentDateTime();
+    }
+
+private:
+    QString m_file;
+};
+#include "QCollator"
+#endif

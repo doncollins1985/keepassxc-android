@@ -1,0 +1,35 @@
+#ifndef QMUTEX_H
+#define QMUTEX_H
+
+#include "QtGlobal"
+#include <mutex>
+
+class QMutex {
+public:
+    void lock() { m_mutex.lock(); }
+    void unlock() { m_mutex.unlock(); }
+    bool tryLock() { return m_mutex.try_lock(); }
+    
+private:
+    std::mutex m_mutex;
+};
+
+class QRecursiveMutex {
+public:
+    void lock() { m_mutex.lock(); }
+    void unlock() { m_mutex.unlock(); }
+    
+private:
+    std::recursive_mutex m_mutex;
+};
+
+class QMutexLocker {
+public:
+    QMutexLocker(QMutex* mutex) : m_mutex(mutex) { m_mutex->lock(); }
+    ~QMutexLocker() { m_mutex->unlock(); }
+    
+private:
+    QMutex* m_mutex;
+};
+
+#endif

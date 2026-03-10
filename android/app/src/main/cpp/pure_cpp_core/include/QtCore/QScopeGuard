@@ -1,0 +1,22 @@
+#ifndef QSCOPEGUARD_H
+#define QSCOPEGUARD_H
+
+#include <utility>
+
+template <typename F>
+class QScopeGuard {
+public:
+    explicit QScopeGuard(F&& f) : m_f(std::move(f)), m_active(true) {}
+    ~QScopeGuard() { if (m_active) m_f(); }
+    void dismiss() { m_active = false; }
+private:
+    F m_f;
+    bool m_active;
+};
+
+template <typename F>
+QScopeGuard<F> qScopeGuard(F&& f) {
+    return QScopeGuard<F>(std::forward<F>(f));
+}
+
+#endif

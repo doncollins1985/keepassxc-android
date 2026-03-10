@@ -1,0 +1,59 @@
+#ifndef QSET_H
+#define QSET_H
+
+#include "QtGlobal"
+#include <unordered_set>
+
+template <typename T>
+class QSet : public std::unordered_set<T> {
+public:
+    using std::unordered_set<T>::unordered_set;
+    
+    template <typename InputIt>
+    QSet(InputIt first, InputIt last) : std::unordered_set<T>(first, last) {}
+    
+    void insert(const T& t) { std::unordered_set<T>::insert(t); }
+    bool contains(const T& t) const { return this->find(t) != this->end(); }
+    
+    bool remove(const T& t) {
+        auto it = this->find(t);
+        if (it != this->end()) {
+            this->erase(it);
+            return true;
+        }
+        return false;
+    }
+    
+    bool isEmpty() const {
+        return this->empty();
+    }
+    
+    int count() const {
+        return static_cast<int>(this->size());
+    }
+    
+    QSet& unite(const QSet& other) {
+        for (const T& t : other) insert(t);
+        return *this;
+    }
+    
+    QSet operator&(const QSet& other) const {
+        QSet res;
+        for (const auto& i : *this) {
+            if (other.contains(i)) res.insert(i);
+        }
+        return res;
+    }
+    
+    QSet operator-(const QSet& other) const {
+        QSet res;
+        for (const auto& i : *this) {
+            if (!other.contains(i)) res.insert(i);
+        }
+        return res;
+    }
+    
+    QList<T> values() const;
+};
+
+#endif

@@ -20,6 +20,7 @@
 
 #include <QUuid>
 #include <QVariant>
+#include <QSharedPointer>
 
 #define KDF_MIN_SEED_SIZE 8
 #define KDF_MAX_SEED_SIZE 32

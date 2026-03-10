@@ -1,0 +1,9 @@
+#ifndef QMETAPROPERTY_H
+#define QMETAPROPERTY_H
+#include "QString"
+class QMetaProperty {
+public:
+    const char* name() const { return ""; }
+    bool isReadable() const { return true; }
+};
+#endif

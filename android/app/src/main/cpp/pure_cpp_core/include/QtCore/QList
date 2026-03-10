@@ -1,0 +1,334 @@
+#ifndef QLIST_H
+#define QLIST_H
+
+class QRegularExpression;
+
+#include "QSet"
+#include "QString"
+#include "QVector"
+#include "QtGlobal"
+#include <algorithm>
+#include <initializer_list>
+
+template <typename T> class QList : public QVector<T>
+{
+public:
+    using QVector<T>::QVector;
+
+    template <typename InputIt>
+    QList(InputIt first, InputIt last)
+        : QVector<T>(first, last)
+    {
+    }
+    QList()
+    {
+    }
+    QList(const QVector<T>& other)
+        : QVector<T>(other)
+    {
+    }
+    QList(std::initializer_list<T> l)
+        : QVector<T>(l.begin(), l.end())
+    {
+    }
+
+    void append(const T& t)
+    {
+        this->push_back(t);
+    }
+    void append(const QList<T>& other)
+    {
+        for (const T& item : other) {
+            this->push_back(item);
+        }
+    }
+    int size() const
+    {
+        return static_cast<int>(std::vector<T>::size());
+    }
+    int count() const
+    {
+        return size();
+    }
+    int length() const
+    {
+        return size();
+    }
+    bool isEmpty() const
+    {
+        return this->empty();
+    }
+
+    T& first()
+    {
+        return (*this)[0];
+    }
+    const T& first() const
+    {
+        return (*this)[0];
+    }
+    T& last()
+    {
+        return (*this)[size() - 1];
+    }
+    const T& last() const
+    {
+        return (*this)[size() - 1];
+    }
+    T value(int i) const
+    {
+        return (i >= 0 && i < this->size()) ? (*this)[i] : T();
+    }
+    T takeFirst()
+    {
+        T res = this->front();
+        this->erase(this->begin());
+        return res;
+    }
+    QSet<T> toSet() const
+    {
+        QSet<T> res;
+        for (const T& item : *this)
+            res.insert(item);
+        return res;
+    }
+
+    QList<T>& operator<<(const T& t)
+    {
+        this->append(t);
+        return *this;
+    }
+
+    QList<T>& operator+=(const T& t)
+    {
+        this->append(t);
+        return *this;
+    }
+
+    QList<T>& operator+=(const QList<T>& other)
+    {
+        for (const auto& t : other)
+            this->append(t);
+        return *this;
+    }
+
+    void prepend(const T& t)
+    {
+        this->insert(0, t);
+    }
+
+    void insert(int i, const T& t)
+    {
+        std::vector<T>::insert(this->begin() + i, t);
+    }
+
+    void move(int from, int to)
+    {
+        if (from == to)
+            return;
+        T val = this->at(from);
+        this->erase(this->begin() + from);
+        this->insert(to, val);
+    }
+
+    T takeLast()
+    {
+        T res = this->back();
+        this->pop_back();
+        return res;
+    }
+    QList<T>& operator<<(const QList<T>& other)
+    {
+        for (const auto& t : other)
+            this->append(t);
+        return *this;
+    }
+
+    QList<T> operator+(const QList<T>& other) const
+    {
+        QList<T> res = *this;
+        for (const auto& t : other)
+            res.append(t);
+        return res;
+    }
+
+    bool contains(const T& t) const
+    {
+        return std::find(this->begin(), this->end(), t) != this->end();
+    }
+
+    int removeAll(const T& t)
+    {
+        auto it = std::remove(this->begin(), this->end(), t);
+        int count = std::distance(it, this->end());
+        this->erase(it, this->end());
+        return count;
+    }
+
+    bool removeOne(const T& t)
+    {
+        auto it = std::find(this->begin(), this->end(), t);
+        if (it != this->end()) {
+            this->erase(it);
+            return true;
+        }
+        return false;
+    }
+
+    void sort()
+    {
+        std::sort(this->begin(), this->end());
+    }
+
+    QList<T> mid(int pos, int len = -1) const
+    {
+        if (pos >= this->size())
+            return QList<T>();
+        int actualLen = (len == -1) ? (this->size() - pos) : std::min(len, static_cast<int>(this->size()) - pos);
+        QList<T> res;
+        for (int i = 0; i < actualLen; ++i)
+            res.append((*this)[pos + i]);
+        return res;
+    }
+};
+
+class QStringList : public QList<QString>
+{
+public:
+    using QList<QString>::QList;
+    QStringList()
+    {
+    }
+    QStringList(const QList<QString>& other)
+        : QList<QString>(other)
+    {
+    }
+    QStringList(const QString& s)
+    {
+        this->append(s);
+    }
+    QStringList(std::initializer_list<QString> l)
+        : QList<QString>(l)
+    {
+    }
+    QStringList(std::initializer_list<const char*> l)
+    {
+        for (const char* s : l)
+            this->append(QString(s));
+    }
+
+    QString join(const QString& sep) const
+    {
+        QString res;
+        for (int i = 0; i < this->size(); ++i) {
+            if (i > 0)
+                res.append(sep);
+            res.append((*this)[i]);
+        }
+        return res;
+    }
+
+    QString join(char sep) const
+    {
+        return join(QString(1, sep));
+    }
+
+    QStringList& operator<<(const QString& s)
+    {
+        this->append(s);
+        return *this;
+    }
+
+    QStringList& operator<<(const QStringList& other)
+    {
+        for (const auto& s : other)
+            this->append(s);
+        return *this;
+    }
+
+    QStringList filter(const QRegularExpression& re) const
+    {
+        QStringList res;
+        return res;
+    }
+
+    int indexOf(const QRegularExpression& re, int from = 0) const
+    {
+        return -1;
+    }
+
+    QStringList mid(int pos, int len = -1) const
+    {
+        return QStringList(QList<QString>::mid(pos, len));
+    }
+};
+
+template <typename T> class QMutableListIterator
+{
+public:
+    QMutableListIterator(QList<T>& list)
+        : m_list(list)
+        , m_idx(0)
+    {
+    }
+    void toBack()
+    {
+        m_idx = m_list.size();
+    }
+    bool hasNext() const
+    {
+        return m_idx < m_list.size();
+    }
+    T& next()
+    {
+        return m_list[m_idx++];
+    }
+    bool hasPrevious() const
+    {
+        return m_idx > 0;
+    }
+    T& previous()
+    {
+        return m_list[--m_idx];
+    }
+    void remove()
+    {
+        m_list.erase(m_list.begin() + m_idx);
+    }
+
+private:
+    QList<T>& m_list;
+    int m_idx;
+};
+
+inline QStringList QString::split(const QString& sep, Qt::SplitBehavior behavior) const
+{
+    QList<QString> res;
+    size_t start = 0;
+    size_t end = find(sep);
+    while (end != std::string::npos) {
+        QString part = substr(start, end - start);
+        if (behavior == Qt::KeepEmptyParts || !part.empty())
+            res.append(part);
+        start = end + sep.size();
+        end = find(sep, start);
+    }
+    QString part = substr(start);
+    if (behavior == Qt::KeepEmptyParts || !part.empty())
+        res.append(part);
+    return res;
+}
+
+
+
+inline QStringList QString::split(char sep, Qt::SplitBehavior behavior) const
+{
+    return split(QString(std::string(1, sep).c_str()), behavior);
+}
+
+template <typename T> inline QList<T> QSet<T>::values() const
+{
+    return QList<T>(this->begin(), this->end());
+}
+
+#endif

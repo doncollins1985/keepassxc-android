@@ -1,0 +1,100 @@
+#ifndef QURL_H
+#define QURL_H
+
+#include "QByteArray"
+#include "QString"
+
+class QUrl
+{
+public:
+    QUrl()
+    {
+    }
+    QUrl(const QString& url)
+        : m_url(url)
+    {
+    }
+
+    static QUrl fromUserInput(const QString& s)
+    {
+        return QUrl(s);
+    }
+    static QUrl fromLocalFile(const QString& s)
+    {
+        return QUrl("file://" + s);
+    }
+
+    static QByteArray toPercentEncoding(const QByteArray& input)
+    {
+        return input;
+    }
+    static QByteArray toPercentEncoding(const QString& input, const QByteArray& exclude = QByteArray(), const QByteArray& include = QByteArray())
+    {
+        return QByteArray();
+    }
+    static QString fromPercentEncoding(const QByteArray& input)
+    {
+        return QString(input.data());
+    }
+
+    enum FormattingOption
+    {
+        None = 0,
+        RemoveScheme = 1,
+        FullyDecoded = 2
+    };
+
+    bool isValid() const
+    {
+        return !m_url.isEmpty();
+    }
+    QString toString(int options = None) const
+    {
+        return m_url;
+    }
+    QString host() const
+    {
+        return "";
+    } // Mock
+    QString path() const
+    {
+        return "";
+    } // Mock
+    QString scheme() const
+    {
+        return "";
+    }
+    int port() const
+    {
+        return 0;
+    }
+    QString query() const
+    {
+        return "";
+    }
+    QString fragment() const
+    {
+        return "";
+    }
+    QString userInfo() const
+    {
+        return "";
+    }
+    QString userName() const
+    {
+        return "";
+    }
+    QString password() const
+    {
+        return "";
+    }
+    QString url() const
+    {
+        return m_url;
+    }
+
+private:
+    QString m_url;
+};
+
+#endif

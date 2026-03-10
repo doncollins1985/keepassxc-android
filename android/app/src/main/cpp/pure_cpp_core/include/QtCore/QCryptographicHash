@@ -1,0 +1,45 @@
+#ifndef QCRYPTOGRAPHICHASH_H
+#define QCRYPTOGRAPHICHASH_H
+
+#include "QByteArray"
+#include <botan/hash.h>
+#include <memory>
+
+class QCryptographicHash {
+public:
+    enum Algorithm { Sha256, Sha512, Md5, Sha1 };
+private:
+    QByteArray m_buffer;
+    Algorithm m_algo;
+public:
+    QCryptographicHash(Algorithm algo) : m_algo(algo) {
+    }
+    static QByteArray hash(const QByteArray& data, Algorithm algo) {
+        QCryptographicHash h(algo);
+        h.addData(data);
+        return h.result();
+    }
+    void addData(const QByteArray& data) {
+        m_buffer.append(data.data(), data.size());
+    }
+    void addData(const char* data, int length) {
+        m_buffer.append(data, length);
+    }
+    void reset() {
+        m_buffer = QByteArray();
+    }
+    QByteArray result() const {
+        std::unique_ptr<Botan::HashFunction> hash;
+        if (m_algo == Sha256) hash = Botan::HashFunction::create("SHA-256");
+        else if (m_algo == Sha512) hash = Botan::HashFunction::create("SHA-512");
+        else if (m_algo == Md5) hash = Botan::HashFunction::create("MD5");
+        else if (m_algo == Sha1) hash = Botan::HashFunction::create("SHA-1");
+        
+        if (!hash) return QByteArray();
+        hash->update(reinterpret_cast<const uint8_t*>(m_buffer.data()), m_buffer.size());
+        auto out = hash->final();
+        return QByteArray(reinterpret_cast<const char*>(out.data()), out.size());
+    }
+};
+
+#endif

@@ -1,0 +1,20 @@
+#ifndef QMIMEDATABASE_H
+#define QMIMEDATABASE_H
+
+#include "QString"
+
+class QFileInfo;
+
+class QMimeType {
+public:
+    QString name() const { return ""; }
+};
+
+class QMimeDatabase {
+public:
+    QMimeType mimeTypeForFile(const QString&) const { return QMimeType(); }
+    QMimeType mimeTypeForFile(const QFileInfo&) const { return QMimeType(); }
+    QMimeType mimeTypeForData(const QByteArray&) const { return QMimeType(); }
+};
+
+#endif

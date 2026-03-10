@@ -17,6 +17,7 @@
  */
 
 #include "FileKey.h"
+#include <QXmlStreamWriter>
 
 #include "core/Tools.h"
 #include "crypto/CryptoHash.h"

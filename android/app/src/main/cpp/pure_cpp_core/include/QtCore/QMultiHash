@@ -1,0 +1,12 @@
+#ifndef QMULTIHASH_H
+#define QMULTIHASH_H
+
+#include "QHash"
+
+template <typename K, typename V>
+class QMultiHash : public QHash<K, V> {
+public:
+    using QHash<K, V>::QHash;
+};
+
+#endif

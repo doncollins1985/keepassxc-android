@@ -1,0 +1,48 @@
+#ifndef QTENDIAN_H
+#define QTENDIAN_H
+
+#include <cstdint>
+#include <cstring>
+#include <algorithm>
+
+template <typename T>
+T qFromLittleEndian(const uint8_t* src) {
+    T res;
+    std::memcpy(&res, src, sizeof(T));
+    // Assume host is little endian for now (common for Android/ARM)
+    return res;
+}
+
+template <typename T>
+T qFromBigEndian(const uint8_t* src) {
+    T res;
+    std::memcpy(&res, src, sizeof(T));
+    // Swap bytes for big endian
+    uint8_t* p = reinterpret_cast<uint8_t*>(&res);
+    std::reverse(p, p + sizeof(T));
+    return res;
+}
+
+template <typename T>
+void qToLittleEndian(T src, uint8_t* dest) {
+    std::memcpy(dest, &src, sizeof(T));
+}
+
+template <typename T>
+void qToBigEndian(T src, uint8_t* dest) {
+    std::memcpy(dest, &src, sizeof(T));
+    std::reverse(dest, dest + sizeof(T));
+}
+
+template <typename T>
+T qToBigEndian(T src) {
+    T res;
+    std::memcpy(&res, &src, sizeof(T));
+    uint8_t* p = reinterpret_cast<uint8_t*>(&res);
+    std::reverse(p, p + sizeof(T));
+    return res;
+}
+
+typedef uint8_t uchar;
+
+#endif

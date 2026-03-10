@@ -1,0 +1,55 @@
+#ifndef QXMLSTREAMREADER_H
+#define QXMLSTREAMREADER_H
+
+#include <string>
+#include <vector>
+#include <memory>
+#include "QString"
+#include "QByteArray"
+
+class QIODevice;
+
+class QXmlStreamAttributes {
+public:
+    bool hasAttribute(const QString&) const { return false; }
+    QStringRef value(const QString&) const { return QStringRef(); }
+    void append(const QString&, const QString&, const QString&) {}
+};
+
+class QXmlStreamReader {
+public:
+    enum TokenType { NoToken, StartDocument, EndDocument, StartElement, EndElement, Characters, Comment, DTD, EntityReference, ProcessingInstruction, Invalid };
+    
+    QXmlStreamReader() : m_token(NoToken) {}
+    QXmlStreamReader(QIODevice* device) : m_token(NoToken) {}
+    void setDevice(QIODevice* device) {}
+    
+    bool atEnd() const { return false; } // Mock
+    bool hasError() const { return false; } // Mock
+    QString errorString() const { return ""; } // Mock
+    
+    TokenType readNext();
+    bool readNextStartElement();
+    void skipCurrentElement();
+    
+    QStringRef name() const { return QStringRef(); } // Mock
+    QStringRef text() const { return QStringRef(); } // Mock
+    QXmlStreamAttributes attributes() const { return QXmlStreamAttributes(); } // Mock
+    
+    void clear() {}
+    bool error() const { return false; }
+    int lineNumber() const { return 0; }
+    int columnNumber() const { return 0; }
+    QString readElementText() const { return QString(); }
+
+    TokenType tokenType() const { return m_token; }
+    bool isStartElement() const { return m_token == StartElement; }
+    bool isEndElement() const { return m_token == EndElement; }
+    bool isCharacters() const { return m_token == Characters; }
+    
+private:
+    TokenType m_token;
+    // TODO: Add pugixml integration here
+};
+
+#endif

@@ -1,0 +1,103 @@
+#ifndef QOBJECT_H
+#define QOBJECT_H
+
+#include "QString"
+#include "QtGlobal"
+#include "QVariant"
+#include "QMetaProperty"
+
+class QObject;
+
+class QMetaObject {
+public:
+    int propertyCount() const { return 0; }
+    QMetaProperty property(int) const { return QMetaProperty(); }
+    
+    template <typename... Args> static void invokeMethod(QObject* obj, const char* member, int type, Args... args)
+    {
+    }
+    template <typename... Args> static void invokeMethod(QObject* obj, const char* member, Args... args)
+    {
+    }
+};
+
+// Minimal QObject and macros
+class QObject
+{
+public:
+    QObject(QObject* parent = nullptr)
+        : m_parent(parent)
+    {
+    }
+    virtual ~QObject()
+    {
+    }
+
+    const QMetaObject* metaObject() const { return nullptr; }
+    QVariant property(const char*) const { return QVariant(); }
+
+    QObject* parent() const
+    {
+        return m_parent;
+    }
+    void setParent(QObject* parent)
+    {
+        m_parent = parent;
+    }
+    void deleteLater()
+    {
+        delete this;
+    }
+    bool blockSignals(bool)
+    {
+        return false;
+    }
+
+    static void connect(const QObject*, const char*, const QObject*, const char*)
+    {
+    }
+
+    void connect(const QObject*, const char*, const char*)
+    {
+    }
+
+    template <typename T1, typename T2, typename T3, typename T4> static void connect(T1, T2, T3, T4)
+    {
+    }
+
+    void disconnect(QObject* = nullptr)
+    {
+    }
+
+    static QString tr(const char* s, const char* c = nullptr, int n = -1)
+    {
+        return QString(s);
+    }
+
+private:
+    QObject* m_parent;
+};
+
+template <typename T, typename S> T qobject_cast(S* obj)
+{
+    return dynamic_cast<T>(obj);
+}
+
+#define Q_OBJECT                                                                                                       \
+    static QString tr(const char* s, const char* c = nullptr, int n = -1)                                              \
+    {                                                                                                                  \
+        return QString(s);                                                                                             \
+    }
+#define Q_PROPERTY(...)
+#define Q_DECLARE_PRIVATE(Class)
+#define Q_DECLARE_PUBLIC(Class)
+#define Q_DISABLE_COPY(Class)
+
+#define signals public
+#define slots
+#define Q_SIGNAL
+#define Q_SLOT
+
+#define Q_ARG(type, data) false
+
+#endif

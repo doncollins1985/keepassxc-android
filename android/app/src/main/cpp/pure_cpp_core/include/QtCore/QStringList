@@ -1,0 +1,6 @@
+#ifndef QSTRINGLIST_H
+#define QSTRINGLIST_H
+
+#include "QList"
+
+#endif

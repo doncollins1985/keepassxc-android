@@ -1,0 +1,22 @@
+#ifndef KEEPASSX_CONFIG_KEEPASSX_H
+#define KEEPASSX_CONFIG_KEEPASSX_H
+
+#define KEEPASSXC_VERSION "2.8.0-android"
+
+#define WITH_XC_ALL
+// Disable features that depend on Qt or are not needed for a reader prototype
+#undef WITH_XC_AUTOTYPE
+#undef WITH_XC_NETWORKING
+#undef WITH_XC_BROWSER
+#undef WITH_XC_BROWSER_PASSKEYS
+#undef WITH_XC_YUBIKEY
+#undef WITH_XC_SSHAGENT
+#undef WITH_XC_KEESHARE
+#undef WITH_XC_UPDATECHECK
+#undef WITH_XC_FDOSECRETS
+#undef WITH_XC_X11
+
+#define KEEPASSXC_BUILD_TYPE "Release"
+#define KEEPASSXC_BUILD_TYPE_RELEASE
+
+#endif // KEEPASSX_CONFIG_KEEPASSX_H

@@ -1,0 +1,84 @@
+#ifndef QVARIANT_H
+#define QVARIANT_H
+
+#include "QByteArray"
+#include "QString"
+#include "QMap"
+
+class QVariant
+{
+public:
+    QVariant()
+    {
+    }
+    QVariant(const QMap<QString, QVariant>&)
+    {
+    }
+
+    template <typename T> QVariant(const T&)
+    {
+    }
+
+    bool operator==(const QVariant& other) const
+    {
+        return true;
+    }
+    bool operator!=(const QVariant& other) const
+    {
+        return false;
+    }
+
+    QByteArray toByteArray() const
+    {
+        return QByteArray();
+    }
+    QString toString() const
+    {
+        return QString();
+    }
+    int toInt(bool* ok = nullptr) const
+    {
+        if (ok) *ok = true;
+        return 0;
+    }
+    uint toUInt(bool* ok = nullptr) const
+    {
+        if (ok) *ok = true;
+        return 0;
+    }
+    quint64 toULongLong(bool* ok = nullptr) const
+    {
+        if (ok) *ok = true;
+        return 0;
+    }
+    qint64 toLongLong(bool* ok = nullptr) const
+    {
+        if (ok) *ok = true;
+        return 0;
+    }
+    bool toBool() const
+    {
+        return false;
+    }
+
+    int type() const { return 0; }
+
+    bool isValid() const
+    {
+        return true;
+    }
+
+    bool isNull() const
+    {
+        return !isValid();
+    }
+
+    template <typename T> static QVariant fromValue(const T& val)
+    {
+        return QVariant(val);
+    }
+
+    inline QMap<QString, QVariant> toMap() const { return QMap<QString, QVariant>(); }
+};
+
+#endif

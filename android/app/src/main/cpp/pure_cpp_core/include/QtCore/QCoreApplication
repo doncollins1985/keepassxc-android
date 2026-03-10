@@ -1,0 +1,14 @@
+#ifndef QCOREAPPLICATION_H
+#define QCOREAPPLICATION_H
+#include "QString"
+#include "QEventLoop"
+#include "QObject"
+class QCoreApplication : public QObject {
+public:
+    static void processEvents(QEventLoop::ProcessEventsFlag flags = QEventLoop::AllEvents, int maxtime = 0) {}
+    static QString applicationDirPath() { return ""; }
+    static QCoreApplication* instance() { return nullptr; }
+    static const char* aboutToQuit;
+};
+#define qApp (QCoreApplication::instance())
+#endif

@@ -1,0 +1,8 @@
+#ifndef QFILESYSTEMWATCHER_H
+#define QFILESYSTEMWATCHER_H
+#include "QObject"
+class QFileSystemWatcher : public QObject {
+public:
+    QFileSystemWatcher(QObject* parent = nullptr) : QObject(parent) {}
+};
+#endif

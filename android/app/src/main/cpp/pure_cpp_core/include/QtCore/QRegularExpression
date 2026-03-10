@@ -1,0 +1,123 @@
+#ifndef QREGULAREXPRESSION_H
+#define QREGULAREXPRESSION_H
+
+#include "QString"
+#include "QList"
+#include <regex>
+
+class QRegularExpressionMatch {
+    std::smatch m_match;
+    bool m_hasMatch = false;
+public:
+    QRegularExpressionMatch() {}
+    QRegularExpressionMatch(const std::smatch& m) : m_match(m), m_hasMatch(true) {}
+    bool hasMatch() const { return m_hasMatch; }
+    QString captured(int nth = 0) const { return m_hasMatch && nth < m_match.size() ? QString(m_match[nth].str().c_str()) : QString(); }
+    QString captured(const QString& name) const { return QString(); } // named capture not supported easily
+    QString captured(const char* name) const { return QString(); }
+    int capturedStart(int nth = 0) const { return m_hasMatch && nth < m_match.size() ? m_match.position(nth) : -1; }
+    int capturedStart(const QString& name) const { return -1; }
+    int capturedStart(const char* name) const { return -1; }
+    int capturedLength(int nth = 0) const { return m_hasMatch && nth < m_match.size() ? m_match.length(nth) : 0; }
+    int capturedLength(const QString& name) const { return 0; }
+    int capturedLength(const char* name) const { return 0; }
+    int capturedEnd(int nth = 0) const { return m_hasMatch && nth < m_match.size() ? m_match.position(nth) + m_match.length(nth) : -1; }
+    int capturedEnd(const QString& name) const { return -1; }
+    int capturedEnd(const char* name) const { return -1; }
+};
+
+class QRegularExpressionMatchIterator {
+    std::string m_subject;
+    std::regex m_re;
+    std::sregex_iterator m_it;
+    std::sregex_iterator m_end;
+public:
+    QRegularExpressionMatchIterator() {}
+    QRegularExpressionMatchIterator(const QString& subject, const std::regex& re) 
+        : m_subject(subject.toStdString()), m_re(re), m_it(m_subject.begin(), m_subject.end(), m_re) {}
+    bool hasNext() const { return m_it != m_end; }
+    QRegularExpressionMatch next() { 
+        if (m_it != m_end) {
+            auto m = *m_it;
+            ++m_it;
+            return QRegularExpressionMatch(m);
+        }
+        return QRegularExpressionMatch(); 
+    }
+};
+
+class QRegularExpression {
+    std::string m_pattern;
+    std::regex m_re;
+    bool m_valid = false;
+public:
+    enum PatternOption { NoPatternOption = 0, CaseInsensitiveOption = 1 };
+    QRegularExpression() {}
+    QRegularExpression(const QString& pattern, PatternOption options = NoPatternOption) : m_pattern(pattern.toStdString()) {
+        try {
+            auto flags = std::regex::ECMAScript;
+            if (options & CaseInsensitiveOption) flags |= std::regex::icase;
+            m_re = std::regex(m_pattern, flags);
+            m_valid = true;
+        } catch(...) { m_valid = false; }
+    }
+    void setPatternOptions(PatternOption options) {
+        try {
+            auto flags = std::regex::ECMAScript;
+            if (options & CaseInsensitiveOption) flags |= std::regex::icase;
+            m_re = std::regex(m_pattern, flags);
+            m_valid = true;
+        } catch(...) { m_valid = false; }
+    }
+    QRegularExpressionMatch match(const QString& subject) const { 
+        if (!m_valid) return QRegularExpressionMatch();
+        std::smatch m;
+        std::string s = subject.toStdString();
+        if (std::regex_search(s, m, m_re)) return QRegularExpressionMatch(m);
+        return QRegularExpressionMatch(); 
+    }
+    QRegularExpressionMatchIterator globalMatch(const QString& subject) const { 
+        if (!m_valid) return QRegularExpressionMatchIterator();
+        return QRegularExpressionMatchIterator(subject, m_re); 
+    }
+    static QString escape(const QString& str) { return str; } // simplify
+    bool isValid() const { return m_valid; }
+    QString errorString() const { return isValid() ? QString() : QString("Invalid regex"); }
+    const std::regex& getRegex() const { return m_re; }
+};
+#include "QRegExp"
+
+inline bool QString::contains(const QRegularExpression& re) const {
+    if (!re.isValid()) return false;
+    return std::regex_search(this->toStdString(), re.getRegex());
+}
+
+inline QString& QString::replace(const QRegularExpression& re, const QString& after) {
+    if (!re.isValid()) return *this;
+    std::string res = std::regex_replace(this->toStdString(), re.getRegex(), after.toStdString());
+    this->assign(res);
+    return *this;
+}
+
+inline QString& QString::remove(const QRegularExpression& re) {
+    if (!re.isValid()) return *this;
+    std::string res = std::regex_replace(this->toStdString(), re.getRegex(), "");
+    this->assign(res);
+    return *this;
+}
+
+inline QStringList QString::split(const QRegularExpression& re, Qt::SplitBehavior behavior) const {
+    QStringList res;
+    if (!re.isValid()) return res;
+    std::string s = this->toStdString();
+    std::sregex_token_iterator it(s.begin(), s.end(), re.getRegex(), -1);
+    std::sregex_token_iterator end;
+    for (; it != end; ++it) {
+        if (behavior == Qt::KeepEmptyParts || it->length() > 0) {
+            res.append(QString(it->str().c_str()));
+        }
+    }
+    return res;
+}
+
+#endif

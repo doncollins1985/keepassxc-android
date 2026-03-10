@@ -1,0 +1,36 @@
+#ifndef QSTANDARDPATHS_H
+#define QSTANDARDPATHS_H
+
+#include "QString"
+#include "QStringList"
+
+class QStandardPaths {
+public:
+    enum StandardLocation {
+        DesktopLocation,
+        DocumentsLocation,
+        FontsLocation,
+        ApplicationsLocation,
+        MusicLocation,
+        MoviesLocation,
+        PicturesLocation,
+        TempLocation,
+        HomeLocation,
+        DataLocation,
+        CacheLocation,
+        GenericDataLocation,
+        RuntimeLocation,
+        ConfigLocation,
+        DownloadLocation,
+        GenericCacheLocation,
+        GenericConfigLocation,
+        AppDataLocation,
+        AppConfigLocation,
+        AppLocalDataLocation
+    };
+
+    static QString writableLocation(StandardLocation type) { return "/tmp"; }
+    static QStringList standardLocations(StandardLocation type) { return QStringList() << "/tmp"; }
+};
+
+#endif

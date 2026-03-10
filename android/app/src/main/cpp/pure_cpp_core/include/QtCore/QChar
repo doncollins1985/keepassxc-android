@@ -1,0 +1,29 @@
+#ifndef QCHAR_H
+#define QCHAR_H
+
+#include "QtGlobal"
+
+class QChar {
+public:
+    static const uint16_t Null = 0;
+    QChar() : m_ch(0) {}
+    QChar(char c) : m_ch(static_cast<uint16_t>(c)) {}
+    QChar(int c) : m_ch(static_cast<uint16_t>(c)) {}
+    QChar(uint16_t c) : m_ch(c) {}
+    
+    uint16_t unicode() const { return m_ch; }
+    
+    operator char() const { return static_cast<char>(m_ch); }
+    
+    bool operator==(const QChar& other) const { return m_ch == other.m_ch; }
+    bool operator!=(const QChar& other) const { return m_ch != other.m_ch; }
+    bool operator==(int c) const { return m_ch == c; }
+    bool operator!=(int c) const { return m_ch != c; }
+    bool isHighSurrogate() const { return false; }
+    bool isLowSurrogate() const { return false; }
+    
+private:
+    uint16_t m_ch;
+};
+
+#endif

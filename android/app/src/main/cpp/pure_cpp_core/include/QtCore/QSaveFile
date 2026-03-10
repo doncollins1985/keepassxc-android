@@ -1,0 +1,16 @@
+#ifndef QSAVEFILE_H
+#define QSAVEFILE_H
+
+#include "QFile"
+#include "QDateTime"
+#include "QBuffer"
+
+class QSaveFile : public QFile {
+public:
+    QSaveFile(const QString& name) : QFile(name) {}
+    bool commit() { return true; }
+    void cancelWriting() {}
+    bool setFileTime(const QDateTime& time, int type) { return true; }
+};
+
+#endif

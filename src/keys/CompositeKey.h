@@ -20,6 +20,7 @@
 #define KEEPASSX_COMPOSITEKEY_H
 
 #include <QSharedPointer>
+#include <QList>
 
 #include "keys/Key.h"
 

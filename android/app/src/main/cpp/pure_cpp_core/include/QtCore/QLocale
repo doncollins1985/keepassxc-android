@@ -1,0 +1,12 @@
+#ifndef QLOCALE_H
+#define QLOCALE_H
+#include "QString"
+class QLocale {
+public:
+    enum FormatType { LongFormat, ShortFormat };
+    QLocale() {}
+    QString toString(qint64 i) const { return QString::number(i); }
+    QString toString(double i, char f = 'g', int prec = 6) const { return QString::number(i); }
+    template<typename T> QString toString(T dt, FormatType f = LongFormat) const { return QString(); }
+};
+#endif

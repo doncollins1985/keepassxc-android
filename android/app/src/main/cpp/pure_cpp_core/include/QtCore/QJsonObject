@@ -1,0 +1,15 @@
+#ifndef QJSONOBJECT_H
+#define QJSONOBJECT_H
+
+#include "QVariant"
+#include "QJsonValue"
+
+class QJsonObject {
+public:
+    QJsonObject() {}
+    // Mock methods
+    void insert(const QString& key, const QJsonValue& value) {}
+    QJsonValue value(const QString& key) const { return QJsonValue(); }
+};
+
+#endif

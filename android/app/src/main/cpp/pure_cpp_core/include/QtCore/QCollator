@@ -1,0 +1,16 @@
+#ifndef QCOLLATOR_H
+#define QCOLLATOR_H
+
+#include "QString"
+
+class QCollator {
+public:
+    QCollator() {}
+    void setCasePreference(int) {}
+    void setCaseSensitivity(Qt::CaseSensitivity) {}
+    void setNumericMode(bool) {}
+    int compare(const QString& s1, const QString& s2) const { return 0; }
+    bool operator()(const QString& s1, const QString& s2) const { return false; }
+};
+
+#endif

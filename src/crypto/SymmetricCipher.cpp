@@ -16,6 +16,7 @@
  */
 
 #include "SymmetricCipher.h"
+#include <QObject>
 
 #include "config-keepassx.h"
 #include "format/KeePass2.h"

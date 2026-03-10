@@ -17,6 +17,7 @@
  */
 
 #include "Totp.h"
+#include <QObject>
 
 #include "core/Base32.h"
 #include "core/Clock.h"

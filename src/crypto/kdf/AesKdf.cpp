@@ -16,6 +16,7 @@
  */
 
 #include "AesKdf.h"
+#include <QElapsedTimer>
 
 #include <QtConcurrent>
 

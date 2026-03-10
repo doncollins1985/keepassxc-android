@@ -16,6 +16,7 @@
  */
 
 #include "Argon2Kdf.h"
+#include <QObject>
 
 #include <QElapsedTimer>
 #include <QThread>

@@ -1,0 +1,403 @@
+#ifndef QSTRING_H
+#define QSTRING_H
+
+#include "QByteArray"
+#include "QChar"
+#include "QtGlobal"
+
+class QRegularExpression;
+class QStringList;
+
+class QString : public std::string
+{
+public:
+    using std::string::string;
+    QString()
+        : std::string()
+    {
+    }
+    QString(const char* s)
+        : std::string(s ? s : "")
+    {
+    }
+    QString(QChar c) {}
+    QString(const class QLatin1String& s);
+    QString(const std::string& s)
+        : std::string(s)
+    {
+    }
+    QString(const QByteArray& ba)
+        : std::string(ba.data(), ba.size())
+    {
+    }
+
+    bool isNull() const
+    {
+        return empty();
+    }
+
+    std::string toStdString() const
+    {
+        return *this;
+    }
+
+    QString toString() const { return *this; }
+
+    template <typename T> static QString number(T n)
+    {
+        return QString(std::to_string(n).c_str());
+    }
+    template <typename T> static QString number(T n, int base)
+    {
+        return QString::number(n);
+    }
+    template <typename T> static QString number(T n, char format, int precision)
+    {
+        return QString::number(n);
+    }
+
+    QChar at(int i) const { return QChar((*this)[i]); }
+    QString& remove(int pos, int n) { return *this; }
+
+    static QString fromUtf8(const char* s)
+    {
+        return QString(s);
+    }
+    static QString fromStdString(const std::string& s)
+    {
+        return QString(s);
+    }
+    static QString fromLatin1(const char* s)
+    {
+        return QString(s);
+    }
+    static QString fromLatin1(const char* s, int size)
+    {
+        return QString(std::string(s, size));
+    }
+    static QString fromUtf8(const char* s, int size)
+    {
+        return QString(std::string(s, size));
+    }
+    static QString fromLocal8Bit(const char* s)
+    {
+        return QString(s);
+    }
+    void squeeze() {}
+
+    int compare(const QString& other, Qt::CaseSensitivity cs = Qt::CaseSensitive) const
+    {
+        if (cs == Qt::CaseSensitive)
+            return std::string::compare(other);
+        QString s1 = toLower();
+        QString s2 = other.toLower();
+        return s1.std::string::compare(s2);
+    }
+
+    bool startsWith(const QString& other, Qt::CaseSensitivity cs = Qt::CaseSensitive) const
+    {
+        if (size() < other.size())
+            return false;
+        return mid(0, other.size()).compare(other, cs) == 0;
+    }
+
+    bool startsWith(char16_t c) const
+    {
+        return size() > 0 && (*this)[0] == (char)c;
+    }
+
+    bool endsWith(const QString& other, Qt::CaseSensitivity cs = Qt::CaseSensitive) const
+    {
+        if (size() < other.size())
+            return false;
+        return mid(size() - other.size()).compare(other, cs) == 0;
+    }
+
+    bool contains(const QString& other, Qt::CaseSensitivity cs = Qt::CaseSensitive) const
+    {
+        if (cs == Qt::CaseSensitive)
+            return find(other) != std::string::npos;
+        QString s1 = toLower();
+        QString s2 = other.toLower();
+        return s1.find(s2) != std::string::npos;
+    }
+
+    bool contains(const QRegularExpression& re) const;
+
+    bool contains(char ch) const
+    {
+        return find(ch) != std::string::npos;
+    }
+
+    QString& replace(const QString& before, const QString& after, Qt::CaseSensitivity cs = Qt::CaseSensitive)
+    {
+        size_t pos = 0;
+        while ((pos = find(before, pos)) != std::string::npos) {
+            std::string::replace(pos, before.size(), after);
+            pos += after.size();
+        }
+        return *this;
+    }
+
+    QString& replace(const QRegularExpression& re, const QString& after);
+
+    QString& replace(int pos, int n, const QString& after)
+    {
+        std::string::replace(pos, n, after);
+        return *this;
+    }
+
+    QString mid(int pos, int len = -1) const
+    {
+        if (pos >= static_cast<int>(size()))
+            return QString();
+        if (len == -1)
+            return QString(substr(pos));
+        return QString(substr(pos, len));
+    }
+
+    QString repeated(int count) const
+    {
+        QString res;
+        for (int i = 0; i < count; ++i)
+            res += *this;
+        return res;
+    }
+
+    QString right(int len) const
+    {
+        if (len >= static_cast<int>(size()))
+            return *this;
+        return QString(substr(size() - len));
+    }
+
+    QString left(int len) const
+    {
+        if (len >= static_cast<int>(size()))
+            return *this;
+        return QString(substr(0, len));
+    }
+
+    QString rightRef(int len) const
+    {
+        return right(len);
+    }
+    QString midRef(int pos, int len = -1) const
+    {
+        return mid(pos, len);
+    }
+
+    QString toUpper() const
+    {
+        QString res = *this;
+        std::transform(res.begin(), res.end(), res.begin(), ::toupper);
+        return res;
+    }
+
+    QString toLower() const
+    {
+        QString res = *this;
+        std::transform(res.begin(), res.end(), res.begin(), ::tolower);
+        return res;
+    }
+
+    QString trimmed() const
+    {
+        QString s = *this;
+        s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) { return !std::isspace(ch); }));
+        s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(), s.end());
+        return s;
+    }
+
+    int toInt(bool* ok = nullptr, int base = 10) const
+    {
+        try {
+            size_t pos;
+            int res = std::stoi(*this, &pos, base);
+            if (ok)
+                *ok = (pos == size());
+            return res;
+        } catch (...) {
+            if (ok)
+                *ok = false;
+            return 0;
+        }
+    }
+
+    uint toUInt(bool* ok = nullptr, int base = 10) const
+    {
+        try {
+            size_t pos;
+            unsigned long res = std::stoul(*this, &pos, base);
+            if (ok)
+                *ok = (pos == size());
+            return static_cast<uint>(res);
+        } catch (...) {
+            if (ok)
+                *ok = false;
+            return 0;
+        }
+    }
+
+    QStringList split(char sep, Qt::SplitBehavior behavior = Qt::KeepEmptyParts) const;
+
+    QStringList split(const QString& sep, Qt::SplitBehavior behavior = Qt::KeepEmptyParts) const;
+    QStringList split(const QRegularExpression& re, Qt::SplitBehavior behavior = Qt::KeepEmptyParts) const;
+
+    QString& remove(const QRegularExpression& re);
+    QString& remove(const QString& s)
+    {
+        return replace(s, "");
+    }
+
+    QString simplified() const { return *this; }
+
+    QByteArray toLatin1() const
+    {
+        return QByteArray(c_str(), static_cast<int>(size()));
+    }
+
+    QByteArray toUtf8() const
+    {
+        return QByteArray(c_str(), static_cast<int>(size()));
+    }
+
+    bool isEmpty() const
+    {
+        return empty();
+    }
+    int length() const
+    {
+        return static_cast<int>(size());
+    }
+    int size() const
+    {
+        return static_cast<int>(std::string::size());
+    }
+    int count() const
+    {
+        return size();
+    }
+
+    QString& append(const QString& other)
+    {
+        std::string::append(other);
+        return *this;
+    }
+
+    QString& append(QChar ch)
+    {
+        std::string::push_back(static_cast<char>(ch.unicode()));
+        return *this;
+    }
+
+    QString& append(char ch)
+    {
+        std::string::push_back(ch);
+        return *this;
+    }
+
+    QString& prepend(const QString& other)
+    {
+        this->insert(0, other);
+        return *this;
+    }
+
+    QString& operator+=(const QString& other)
+    {
+        this->append(other);
+        return *this;
+    }
+
+    QString& operator+=(const char* other)
+    {
+        *this += QString(other);
+        return *this;
+    }
+
+    char& operator[](int i)
+    {
+        return std::string::operator[](i);
+    }
+    const char& operator[](int i) const
+    {
+        return std::string::operator[](i);
+    }
+
+    QString& arg(const QString& a)
+    {
+        size_t pos = find("%1");
+        if (pos != std::string::npos)
+            std::string::replace(pos, 2, a);
+        return *this;
+    }
+
+    QString& arg(const QString& a1, const QString& a2)
+    {
+        return arg(a1).arg(a2);
+    }
+
+    QString& arg(const QString& a1, const QString& a2, const QString& a3)
+    {
+        return arg(a1).arg(a2).arg(a3);
+    }
+
+    QString& arg(int a)
+    {
+        return arg(QString(std::to_string(a).c_str()));
+    }
+
+    template<typename... Args> QString& arg(Args... args) { return *this; }
+
+    friend QString operator%(const QString& s1, const QString& s2)
+    {
+        return s1 + s2;
+    }
+    friend QString operator%(const char* s1, const QString& s2)
+    {
+        return QString(s1) + s2;
+    }
+    friend QString operator%(const QString& s1, const char* s2)
+    {
+        return s1 + QString(s2);
+    }
+};
+
+class QLatin1String
+{
+public:
+    QLatin1String(const char* s)
+        : m_s(s)
+    {
+    }
+    bool operator==(const QString& other) const
+    {
+        return other == m_s;
+    }
+    friend bool operator==(const QString& other, const QLatin1String& s)
+    {
+        return other == s.m_s;
+    }
+    const char* latin1() const { return m_s; }
+
+private:
+    const char* m_s;
+};
+
+namespace std
+{
+    template <> struct hash<QString>
+    {
+        size_t operator()(const QString& s) const
+        {
+            return std::hash<std::string>()(s);
+        }
+    };
+} // namespace std
+
+#include "QStringRef"
+
+inline QString::QString(const QLatin1String& s) {
+    if (s.latin1()) assign(s.latin1());
+}
+#endif

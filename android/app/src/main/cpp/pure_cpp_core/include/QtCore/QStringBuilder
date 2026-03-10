@@ -1,0 +1,6 @@
+#ifndef QSTRINGBUILDER_H
+#define QSTRINGBUILDER_H
+
+#include "QString"
+
+#endif

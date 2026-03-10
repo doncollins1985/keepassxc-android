@@ -1,0 +1,17 @@
+#ifndef QDATASTREAM_H
+#define QDATASTREAM_H
+#include "QIODevice"
+#include "QByteArray"
+class QDataStream {
+public:
+    QDataStream() {}
+    QDataStream(QIODevice*) {}
+    QDataStream(const QByteArray&) {}
+    QDataStream(QByteArray*, QIODevice::OpenMode) {}
+    
+    template<typename T> QDataStream& operator<<(const T&) { return *this; }
+    template<typename T> QDataStream& operator>>(T&) { return *this; }
+    
+    bool atEnd() const { return true; }
+};
+#endif

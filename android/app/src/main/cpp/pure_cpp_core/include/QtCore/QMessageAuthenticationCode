@@ -1,0 +1,44 @@
+#ifndef QMESSAGEAUTHENTICATIONCODE_H
+#define QMESSAGEAUTHENTICATIONCODE_H
+
+#include "QByteArray"
+#include "QCryptographicHash"
+#include <botan/mac.h>
+#include <memory>
+#include <vector>
+
+class QMessageAuthenticationCode
+{
+    QByteArray m_key;
+    QByteArray m_buffer;
+    QCryptographicHash::Algorithm m_method;
+public:
+    QMessageAuthenticationCode(QCryptographicHash::Algorithm method) : m_method(method) {}
+    void setKey(const QByteArray& key) {
+        m_key = key;
+    }
+    void addData(const QByteArray& data) {
+        m_buffer.append(data.data(), data.size());
+    }
+    QByteArray result() const {
+        std::unique_ptr<Botan::MessageAuthenticationCode> mac;
+        if (m_method == QCryptographicHash::Sha256) mac = Botan::MessageAuthenticationCode::create("HMAC(SHA-256)");
+        else if (m_method == QCryptographicHash::Sha512) mac = Botan::MessageAuthenticationCode::create("HMAC(SHA-512)");
+        else if (m_method == QCryptographicHash::Sha1) mac = Botan::MessageAuthenticationCode::create("HMAC(SHA-1)");
+        
+        if (!mac) return QByteArray();
+        if (m_key.size() > 0) mac->set_key(reinterpret_cast<const uint8_t*>(m_key.data()), m_key.size());
+        if (m_buffer.size() > 0) mac->update(reinterpret_cast<const uint8_t*>(m_buffer.data()), m_buffer.size());
+        auto out = mac->final();
+        return QByteArray(reinterpret_cast<const char*>(out.data()), out.size());
+    }
+    
+    static QByteArray hash(const QByteArray& message, const QByteArray& key, QCryptographicHash::Algorithm method) {
+        QMessageAuthenticationCode mac(method);
+        mac.setKey(key);
+        mac.addData(message);
+        return mac.result();
+    }
+};
+
+#endif

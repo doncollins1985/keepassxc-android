@@ -1,0 +1,11 @@
+#ifndef QREGEXP_H
+#define QREGEXP_H
+#include "QString"
+#include "QtGlobal"
+class QRegExp {
+public:
+    enum PatternSyntax { RegExp2 };
+    QRegExp(const QString& pattern, Qt::CaseSensitivity cs = Qt::CaseSensitive, PatternSyntax syntax = RegExp2) {}
+    bool exactMatch(const QString& str) const { return false; }
+};
+#endif

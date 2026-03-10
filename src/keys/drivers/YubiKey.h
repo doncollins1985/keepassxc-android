@@ -19,6 +19,7 @@
 #ifndef KEEPASSX_YUBIKEY_H
 #define KEEPASSX_YUBIKEY_H
 
+#include <QMetaType>
 #include <QHash>
 #include <QMultiMap>
 #include <QMutex>

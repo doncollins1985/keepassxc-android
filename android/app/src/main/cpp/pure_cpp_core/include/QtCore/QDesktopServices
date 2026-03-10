@@ -1,0 +1,12 @@
+#ifndef QDESKTOPSERVICES_H
+#define QDESKTOPSERVICES_H
+
+#include "QtGlobal"
+#include "QUrl"
+
+class QDesktopServices {
+public:
+    static bool openUrl(const QUrl& url) { return false; }
+};
+
+#endif

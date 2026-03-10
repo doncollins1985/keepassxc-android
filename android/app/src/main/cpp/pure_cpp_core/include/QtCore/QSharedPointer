@@ -1,0 +1,40 @@
+#ifndef QSHAREDPOINTER_H
+#define QSHAREDPOINTER_H
+
+#include "QtGlobal"
+
+template <typename T>
+class QSharedPointer : public std::shared_ptr<T> {
+public:
+    QSharedPointer() : std::shared_ptr<T>() {}
+    QSharedPointer(T* ptr) : std::shared_ptr<T>(ptr) {}
+    QSharedPointer(const std::shared_ptr<T>& other) : std::shared_ptr<T>(other) {}
+    
+    template <typename U>
+    QSharedPointer(const QSharedPointer<U>& other) : std::shared_ptr<T>(other) {}
+    
+    template <typename U>
+    QSharedPointer(const std::shared_ptr<U>& other) : std::shared_ptr<T>(other) {}
+
+    bool isNull() const { return this->get() == nullptr; }
+    operator bool() const { return this->get() != nullptr; }
+    T* data() const { return this->get(); }
+    
+    template <typename... Args>
+    static QSharedPointer<T> create(Args&&... args) {
+        return QSharedPointer<T>(std::make_shared<T>(std::forward<Args>(args)...));
+    }
+};
+
+template <typename T>
+class QWeakPointer : public std::weak_ptr<T> {
+public:
+    QWeakPointer() : std::weak_ptr<T>() {}
+    QWeakPointer(const QSharedPointer<T>& other) : std::weak_ptr<T>(other) {}
+    
+    QSharedPointer<T> toStrongRef() const {
+        return QSharedPointer<T>(this->lock());
+    }
+};
+
+#endif

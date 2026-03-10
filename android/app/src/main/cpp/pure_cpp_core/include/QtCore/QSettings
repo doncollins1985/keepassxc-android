@@ -1,0 +1,89 @@
+#ifndef QSETTINGS_H
+#define QSETTINGS_H
+
+#include "QList"
+#include "QString"
+#include "QVariant"
+#include <map>
+
+class QSettings
+{
+public:
+    enum Format
+    {
+        NativeFormat,
+        IniFormat
+    };
+    enum Scope
+    {
+        UserScope,
+        SystemScope
+    };
+
+    QSettings(const QString& path, Format format)
+        : m_path(path)
+    {
+    }
+    QSettings(Scope scope, const QString& organization, const QString& application = QString())
+    {
+    }
+
+    enum Status
+    {
+        NoError,
+        AccessError,
+        FormatError
+    };
+    Status status() const
+    {
+        return NoError;
+    }
+    void clear()
+    {
+        m_data.clear();
+    }
+    QList<QString> allKeys() const
+    {
+        return QList<QString>();
+    }
+    bool contains(const QString& key) const
+    {
+        return m_data.find(key) != m_data.end();
+    }
+
+    void setValue(const QString& key, const QVariant& value)
+    {
+        m_data[key] = value;
+    }
+    QVariant value(const QString& key, const QVariant& defaultValue = QVariant()) const
+    {
+        auto it = m_data.find(key);
+        return (it != m_data.end()) ? it->second : defaultValue;
+    }
+
+    void beginGroup(const QString& group) {}
+    void endGroup() {}
+    QList<QString> childKeys() const { return QList<QString>(); }
+
+    void remove(const QString& key)
+    {
+        m_data.erase(key);
+    }
+    void sync()
+    {
+    }
+    bool isWritable() const
+    {
+        return true;
+    }
+    QString fileName() const
+    {
+        return m_path;
+    }
+
+private:
+    QString m_path;
+    std::map<QString, QVariant> m_data;
+};
+
+#endif

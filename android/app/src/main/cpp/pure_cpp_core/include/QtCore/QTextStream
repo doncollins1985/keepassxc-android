@@ -1,0 +1,23 @@
+#ifndef QTEXTSTREAM_H
+#define QTEXTSTREAM_H
+
+#include "QString"
+#include <iostream>
+
+class QTextStream {
+public:
+    QTextStream() {}
+    QTextStream(QString* s) {}
+    
+    QTextStream& operator<<(const QString& s) { return *this; }
+    QTextStream& operator<<(const char* s) { return *this; }
+    QTextStream& operator<<(int i) { return *this; }
+    
+    enum RealNumberNotation { FixedNotation, ScientificNotation };
+    void setRealNumberNotation(RealNumberNotation n) {}
+    void setRealNumberPrecision(int p) {}
+};
+
+#define endl "\n"
+
+#endif

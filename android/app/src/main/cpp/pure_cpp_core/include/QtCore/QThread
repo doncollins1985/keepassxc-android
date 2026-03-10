@@ -1,0 +1,7 @@
+#ifndef QTHREAD_H
+#define QTHREAD_H
+class QThread {
+public:
+    static int idealThreadCount() { return 4; }
+};
+#endif

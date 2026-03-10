@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Storage Access Framework (SAF) is used, so broad storage permissions are not needed -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    
+    <!-- YubiKey Hardware Support -->
+    <uses-permission android:name="android.permission.NFC" />
+    <uses-feature android:name="android.hardware.nfc" android:required="false" />
+    <uses-feature android:name="android.hardware.usb.host" android:required="false" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="KeePassXC Android"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.KeePassXCAndroid">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="KeePassXC Android"
+            android:theme="@style/Theme.KeePassXCAndroid">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".autofill.KeePassXCAutofillService"
+            android:label="KeePassXC Autofill"
+            android:permission="android.permission.BIND_AUTOFILL_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.autofill.AutofillService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.autofill"
+                android:resource="@xml/autofill_service" />
+        </service>
+    </application>
+
+</manifest>

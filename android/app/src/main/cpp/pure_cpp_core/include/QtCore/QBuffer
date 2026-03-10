@@ -1,0 +1,48 @@
+#ifndef QBUFFER_H
+#define QBUFFER_H
+#include "QIODevice"
+#include "QByteArray"
+class QBuffer : public QIODevice {
+public:
+    QBuffer() {}
+    QBuffer(QByteArray* buf) : m_buf(buf) {}
+    void setBuffer(QByteArray* buf) { m_buf = buf; }
+    QByteArray& buffer() { return *m_buf; }
+    const QByteArray& buffer() const { return *m_buf; }
+    const QByteArray& data() const { return *m_buf; }
+    bool open(OpenMode mode) override { 
+        m_openMode = mode;
+        m_pos = 0;
+        return true; 
+    }
+    void close() override { m_openMode = NotOpen; }
+    qint64 size() const override { return m_buf ? m_buf->size() : 0; }
+    qint64 pos() const override { return m_pos; }
+    bool seek(qint64 pos) override {
+        if (pos < 0 || pos > size()) return false;
+        m_pos = pos;
+        return true;
+    }
+    bool atEnd() const override { return m_pos >= size(); }
+
+    qint64 readData(char *data, qint64 maxlen) override {
+        if (!m_buf) return -1;
+        qint64 len = std::min(maxlen, (qint64)m_buf->size() - m_pos);
+        if (len <= 0) return 0;
+        memcpy(data, m_buf->data() + m_pos, len);
+        m_pos += len;
+        return len;
+    }
+
+    QByteArray peek(int len) override {
+        if (!m_buf) return QByteArray();
+        qint64 actualLen = std::min((qint64)len, (qint64)m_buf->size() - m_pos);
+        if (actualLen <= 0) return QByteArray();
+        return QByteArray(m_buf->data() + m_pos, actualLen);
+    }
+
+private:
+    QByteArray* m_buf = nullptr;
+    qint64 m_pos = 0;
+};
+#endif
