@@ -169,6 +169,20 @@ class DatabaseViewModel : ViewModel() {
         }
     }
 
+    fun createKeyfile(contentResolver: android.content.ContentResolver, uri: android.net.Uri) {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val bytes = NativeCore.createKeyfileAsBytes()
+                contentResolver.openOutputStream(uri, "wt")?.use { outputStream ->
+                    outputStream.write(bytes)
+                    Log.i("DatabaseViewModel", "Keyfile created at URI successfully.")
+                }
+            } catch (e: Exception) {
+                Log.e("DatabaseViewModel", "Failed to create keyfile", e)
+            }
+        }
+    }
+
     private fun refreshEntries() {
         if (dbPtr != 0L) {
             entries = NativeCore.getEntries(dbPtr)

@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.animation.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,6 +25,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -118,6 +120,9 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
                                 onCreateDatabase = { uri, password, keyfileUri, useYubiKey ->
                                     viewModel.createDatabase(contentResolver, uri, password, keyfileUri, useYubiKey)
                                 },
+                                onCreateKeyfile = { uri ->
+                                    viewModel.createKeyfile(contentResolver, uri)
+                                },
                                 onOpenSettings = { currentScreen = Screen.SETTINGS },
                                 settingsManager = settingsManager
                             )
@@ -192,10 +197,25 @@ enum class Screen {
     UNLOCK, DATABASE, ENTRY, SETTINGS, ADD_EDIT_ENTRY
 }
 
+val KeePassXCGreen = Color(0xFF61A142)
+val KeePassXCDarkGrey = Color(0xFF1E1E1E)
+val KeePassXCSurface = Color(0xFF2C313B)
+
 @Composable
 fun KeePassXCTheme(content: @Composable () -> Unit) {
+    val customColorScheme = darkColorScheme(
+        primary = KeePassXCGreen,
+        onPrimary = Color.White,
+        background = KeePassXCDarkGrey,
+        onBackground = Color.White,
+        surface = KeePassXCSurface,
+        onSurface = Color.White,
+        primaryContainer = KeePassXCSurface,
+        onPrimaryContainer = KeePassXCGreen
+    )
+
     MaterialTheme(
-        colorScheme = darkColorScheme(),
+        colorScheme = customColorScheme,
         content = content
     )
 }
@@ -206,6 +226,7 @@ fun UnlockScreen(
     lastError: String?, 
     onUnlock: (Uri, String, Uri?, Boolean) -> Unit, 
     onCreateDatabase: (Uri, String, Uri?, Boolean) -> Unit,
+    onCreateKeyfile: (Uri) -> Unit,
     onOpenSettings: () -> Unit,
     settingsManager: SettingsManager
 ) {
@@ -268,6 +289,25 @@ fun UnlockScreen(
         }
     )
 
+    val createKeyfileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/octet-stream"),
+        onResult = { uri -> 
+            if (uri != null) {
+                try {
+                    context.contentResolver.takePersistableUriPermission(
+                        uri, 
+                        android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or 
+                        android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    )
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+                selectedKeyfileUri = uri
+                onCreateKeyfile(uri)
+            }
+        }
+    )
+
     val keyfilePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument(),
         onResult = { uri -> 
@@ -305,13 +345,12 @@ fun UnlockScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_database_lock),
-                contentDescription = null,
+            Image(
+                painter = painterResource(R.mipmap.ic_launcher),
+                contentDescription = "KeePassXC Logo",
                 modifier = Modifier
                     .size(96.dp)
-                    .padding(bottom = 16.dp),
-                tint = MaterialTheme.colorScheme.primary
+                    .padding(bottom = 16.dp)
             )
             
             Text(
@@ -365,11 +404,10 @@ fun UnlockScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             ElevatedCard(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                onClick = { keyfilePickerLauncher.launch(arrayOf("*/*")) }
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
             ) {
                 Row(
-                    modifier = Modifier.padding(12.dp),
+                    modifier = Modifier.padding(12.dp).clickable { keyfilePickerLauncher.launch(arrayOf("*/*")) },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(painterResource(R.drawable.ic_object_unlocked), contentDescription = null, modifier = Modifier.size(20.dp))
@@ -385,6 +423,10 @@ fun UnlockScreen(
                     if (selectedKeyfileUri != null) {
                         IconButton(onClick = { selectedKeyfileUri = null }, modifier = Modifier.size(24.dp)) {
                             Icon(painterResource(R.drawable.ic_dialog_close), contentDescription = "Clear")
+                        }
+                    } else if (isCreateMode) {
+                        IconButton(onClick = { createKeyfileLauncher.launch("KeePassXC.keyx") }, modifier = Modifier.size(24.dp)) {
+                            Icon(painterResource(R.drawable.ic_entry_new), contentDescription = "Create New Keyfile")
                         }
                     }
                 }

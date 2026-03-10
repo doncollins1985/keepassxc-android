@@ -228,6 +228,23 @@ Java_org_keepassxc_android_NativeCore_createDatabase(
 }
 
 extern "C" JNIEXPORT jbyteArray JNICALL
+Java_org_keepassxc_android_NativeCore_createKeyfileAsBytes(
+        JNIEnv* env,
+        jobject /* thiz */) {
+
+    QByteArray qData;
+    QBuffer buffer(&qData);
+    buffer.open(QIODevice::WriteOnly);
+
+    // KeepassXC v2 XML Keyfile defaults to 32 bytes (256-bit)
+    FileKey::createXMLv2(&buffer, 32);
+
+    jbyteArray result = env->NewByteArray(qData.size());
+    env->SetByteArrayRegion(result, 0, qData.size(), reinterpret_cast<const jbyte*>(qData.data()));
+    return result;
+}
+
+extern "C" JNIEXPORT jbyteArray JNICALL
 Java_org_keepassxc_android_NativeCore_saveDatabaseAsBytes(
         JNIEnv* env,
         jobject /* thiz */,

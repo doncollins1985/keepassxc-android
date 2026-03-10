@@ -50,6 +50,11 @@ object NativeCore {
     external fun saveDatabaseAsBytes(dbPtr: Long): ByteArray?
 
     /**
+     * Creates a new Keyfile (KeePass 2 XML Format) returning the bytes.
+     */
+    external fun createKeyfileAsBytes(): ByteArray
+
+    /**
      * Closes the database and frees the native memory.
      */
     external fun closeDatabase(dbPtr: Long)

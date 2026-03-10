@@ -2,26 +2,49 @@
 #define QXMLSTREAMWRITER_H
 #include "QIODevice"
 #include "QString"
+#include <string>
+#include <vector>
+
 class QXmlStreamWriter {
+    QIODevice* m_device = nullptr;
+    std::string m_out;
+    std::vector<std::string> m_stack;
 public:
     QXmlStreamWriter() {}
-    QXmlStreamWriter(QIODevice*) {}
+    QXmlStreamWriter(QIODevice* dev) : m_device(dev) {}
     QXmlStreamWriter(QString*) {}
     QXmlStreamWriter(QByteArray*) {}
-    void setDevice(QIODevice*) {}
+    void setDevice(QIODevice* dev) { m_device = dev; }
     void setAutoFormatting(bool) {}
     void setAutoFormattingIndent(int) {}
     void setCodec(const char*) {}
-    void writeStartDocument() {}
-    void writeStartDocument(const QString&, bool) {}
-    void writeEndDocument() {}
-    void writeStartElement(const QString&) {}
-    void writeEndElement() {}
-    void writeCharacters(const QString&) {}
-    void writeAttribute(const QString&, const QString&) {}
-    void writeEmptyElement(const QString&) {}
-    void writeTextElement(const QString&, const QString&) {}
-    void writeCDATA(const QString&) {}
+    
+    void write(const std::string& str) {
+        if (m_device) {
+            m_device->write(str.c_str(), str.length());
+        }
+    }
+
+    void writeStartDocument() { write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"); }
+    void writeStartDocument(const QString&, bool) { writeStartDocument(); }
+    void writeEndDocument() { write("\n"); }
+    void writeStartElement(const QString& name) { 
+        m_stack.push_back(name.toStdString());
+        write("<" + name.toStdString() + ">"); 
+    }
+    void writeEndElement() { 
+        if (!m_stack.empty()) {
+            write("</" + m_stack.back() + ">\n");
+            m_stack.pop_back();
+        } else {
+            write("</>\n"); 
+        }
+    }
+    void writeCharacters(const QString& c) { write(c.toStdString()); }
+    void writeAttribute(const QString& name, const QString& value) { write(" " + name.toStdString() + "=\"" + value.toStdString() + "\""); }
+    void writeEmptyElement(const QString& name) { write("<" + name.toStdString() + "/>\n"); }
+    void writeTextElement(const QString& name, const QString& value) { write("<" + name.toStdString() + ">" + value.toStdString() + "</" + name.toStdString() + ">\n"); }
+    void writeCDATA(const QString& c) { write("<![CDATA[" + c.toStdString() + "]]>"); }
     bool hasError() const { return false; }
 };
 #endif

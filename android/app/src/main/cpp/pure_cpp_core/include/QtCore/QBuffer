@@ -34,6 +34,24 @@ public:
         return len;
     }
 
+    qint64 writeData(const char *data, qint64 len) override {
+        if (!m_buf || len <= 0) return 0;
+        if (m_pos < m_buf->size()) {
+            qint64 overwrite = std::min(len, (qint64)m_buf->size() - m_pos);
+            memcpy(m_buf->data() + m_pos, data, overwrite);
+            if (len > overwrite) {
+                m_buf->append(data + overwrite, len - overwrite);
+            }
+        } else {
+            if (m_pos > m_buf->size()) {
+                m_buf->resize(m_pos);
+            }
+            m_buf->append(data, len);
+        }
+        m_pos += len;
+        return len;
+    }
+
     QByteArray peek(int len) override {
         if (!m_buf) return QByteArray();
         qint64 actualLen = std::min((qint64)len, (qint64)m_buf->size() - m_pos);
