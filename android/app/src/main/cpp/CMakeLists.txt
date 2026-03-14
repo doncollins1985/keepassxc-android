@@ -83,7 +83,37 @@ add_library(
     "${KEEPASSXC_SOURCE_DIR}/src/streams/StoreDataStream.cpp"
     "${KEEPASSXC_SOURCE_DIR}/src/streams/SymmetricCipherStream.cpp"
     "${KEEPASSXC_SOURCE_DIR}/src/streams/qtiocompressor.cpp"
+    # Botan and Argon2 wrappers
+    "${CMAKE_CURRENT_SOURCE_DIR}/botan_ltc.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/argon2/src/argon2.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/argon2/src/core.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/argon2/src/blake2/blake2b.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/argon2/src/thread.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/argon2/src/ref.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/argon2/src/encoding.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libtomcrypt/src/ciphers/aes/aes.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libtomcrypt/src/ciphers/twofish/twofish.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libtomcrypt/src/hashes/sha2/sha256.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libtomcrypt/src/hashes/sha2/sha512.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libtomcrypt/src/stream/salsa20/salsa20_setup.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libtomcrypt/src/stream/salsa20/salsa20_ivctr64.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libtomcrypt/src/stream/salsa20/salsa20_crypt.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libtomcrypt/src/stream/salsa20/salsa20_keystream.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libtomcrypt/src/stream/chacha/chacha_setup.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libtomcrypt/src/stream/chacha/chacha_ivctr64.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libtomcrypt/src/stream/chacha/chacha_ivctr32.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libtomcrypt/src/stream/chacha/chacha_crypt.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libtomcrypt/src/stream/chacha/chacha_keystream.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libtomcrypt/src/misc/zeromem.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libtomcrypt/src/misc/crypt/crypt_argchk.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libtomcrypt/src/misc/compare_testvector.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/android_mocks.cpp"
+)
+
+target_include_directories(keepassxc-android-core PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/argon2/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/argon2/src/blake2"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libtomcrypt/src/headers"
 )
 
 target_link_libraries(

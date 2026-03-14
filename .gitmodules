@@ -1,0 +1,12 @@
+[submodule "android/app/src/main/cpp/third_party/libtomcrypt"]
+	path = android/app/src/main/cpp/third_party/libtomcrypt
+	url = https://github.com/libtom/libtomcrypt.git
+[submodule "android/app/src/main/cpp/third_party/yubikit-android"]
+	path = android/app/src/main/cpp/third_party/yubikit-android
+	url = https://github.com/Yubico/yubikit-android
+[submodule "android/app/src/main/cpp/third_party/argon2"]
+	path = android/app/src/main/cpp/third_party/argon2
+	url = https://github.com/P-H-C/phc-winner-argon2.git
+[submodule "android/app/src/main/cpp/third_party/onlykey"]
+	path = android/app/src/main/cpp/third_party/onlykey
+	url = https://github.com/trustcrypto/libraries

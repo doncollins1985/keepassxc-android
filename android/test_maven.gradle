@@ -1,0 +1,4 @@
+apply plugin: 'java'
+repositories { mavenCentral() }
+dependencies { implementation 'com.yubico.yubikit:android:+' }
+task resolveDeps { doLast { configurations.compileClasspath.resolve() } }

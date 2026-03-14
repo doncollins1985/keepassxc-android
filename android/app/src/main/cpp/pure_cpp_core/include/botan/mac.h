@@ -7,7 +7,7 @@
 namespace Botan {
     class MessageAuthenticationCode {
     public:
-        static std::unique_ptr<MessageAuthenticationCode> create(const std::string&) { return std::make_unique<MessageAuthenticationCode>(); }
+        static std::unique_ptr<MessageAuthenticationCode> create(const std::string&);
         virtual ~MessageAuthenticationCode() {}
         virtual void set_key(const uint8_t*, size_t) {}
         virtual void update(const uint8_t*, size_t) {}

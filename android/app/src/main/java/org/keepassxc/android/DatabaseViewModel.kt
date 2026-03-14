@@ -9,6 +9,8 @@ import kotlinx.coroutines.launch
 import android.util.Log
 import org.keepassxc.android.models.Entry
 import org.keepassxc.android.models.EntryDetails
+import org.keepassxc.android.models.GroupNode
+import org.keepassxc.android.models.EntryHistoryItem
 
 class DatabaseViewModel : ViewModel() {
     private var dbPtr: Long = 0
@@ -20,6 +22,12 @@ class DatabaseViewModel : ViewModel() {
         private set
 
     var entries by mutableStateOf<List<Entry>>(emptyList())
+        private set
+
+    var groups by mutableStateOf<List<GroupNode>>(emptyList())
+        private set
+
+    var currentGroupUuid by mutableStateOf<String?>(null)
         private set
 
     var selectedEntry by mutableStateOf<EntryDetails?>(null)
@@ -106,14 +114,20 @@ class DatabaseViewModel : ViewModel() {
             dbPtr = ptr
             isUnlocked = true
             rootGroupName = NativeCore.getRootGroupName(dbPtr)
-            entries = NativeCore.getEntries(dbPtr)
+            refreshGroups()
+            refreshEntries()
             lastError = null
-            Log.i("DatabaseViewModel", "Database unlocked: $rootGroupName with ${entries.size} entries")
+            Log.i("DatabaseViewModel", "Database unlocked: $rootGroupName")
         } else {
             isUnlocked = false
             lastError = "Failed to unlock database. Check password."
             Log.e("DatabaseViewModel", "Failed to unlock database")
         }
+    }
+
+    fun selectGroup(uuid: String?) {
+        currentGroupUuid = uuid
+        refreshEntries()
     }
 
     fun selectEntry(uuid: String?) {
@@ -124,9 +138,17 @@ class DatabaseViewModel : ViewModel() {
         }
     }
 
+    fun getTotp(uuid: String): String? {
+        if (dbPtr != 0L) {
+            return NativeCore.getTotp(dbPtr, uuid)
+        }
+        return null
+    }
+
     fun addEntry(title: String, username: String, password: String, url: String, notes: String): String? {
         if (dbPtr != 0L) {
-            val uuid = NativeCore.addEntry(dbPtr, title, username, password, url, notes)
+            val groupUuid = currentGroupUuid ?: groups.firstOrNull { it.depth == 0 }?.uuid ?: ""
+            val uuid = NativeCore.addEntry(dbPtr, groupUuid, title, username, password, url, notes)
             if (uuid.isNotEmpty()) {
                 refreshEntries()
                 return uuid
@@ -141,8 +163,99 @@ class DatabaseViewModel : ViewModel() {
             if (success) {
                 refreshEntries()
                 if (selectedEntry?.uuid == uuid) {
-                    selectEntry(uuid) // Refresh selected entry details
+                    selectEntry(uuid)
                 }
+                return true
+            }
+        }
+        return false
+    }
+
+    fun addGroup(parentUuid: String?, name: String): String? {
+        if (dbPtr != 0L) {
+            val pUuid = parentUuid ?: currentGroupUuid ?: groups.firstOrNull { it.depth == 0 }?.uuid ?: ""
+            val uuid = NativeCore.addGroup(dbPtr, pUuid, name)
+            if (uuid.isNotEmpty()) {
+                refreshGroups()
+                return uuid
+            }
+        }
+        return null
+    }
+
+    fun renameGroup(groupUuid: String, newName: String): Boolean {
+        if (dbPtr != 0L) {
+            val success = NativeCore.renameGroup(dbPtr, groupUuid, newName)
+            if (success) {
+                refreshGroups()
+                return true
+            }
+        }
+        return false
+    }
+
+    fun deleteGroup(groupUuid: String): Boolean {
+        if (dbPtr != 0L) {
+            val success = NativeCore.deleteGroup(dbPtr, groupUuid)
+            if (success) {
+                if (currentGroupUuid == groupUuid) {
+                    currentGroupUuid = null
+                }
+                refreshGroups()
+                refreshEntries()
+                return true
+            }
+        }
+        return false
+    }
+
+    fun moveEntry(entryUuid: String, targetGroupUuid: String): Boolean {
+        if (dbPtr != 0L) {
+            val success = NativeCore.moveEntry(dbPtr, entryUuid, targetGroupUuid)
+            if (success) {
+                refreshEntries()
+                return true
+            }
+        }
+        return false
+    }
+
+    fun moveGroup(groupUuid: String, targetParentUuid: String): Boolean {
+        if (dbPtr != 0L) {
+            val success = NativeCore.moveGroup(dbPtr, groupUuid, targetParentUuid)
+            if (success) {
+                refreshGroups()
+                return true
+            }
+        }
+        return false
+    }
+
+    fun getEntryHistory(uuid: String): List<org.keepassxc.android.models.EntryHistoryItem> {
+        if (dbPtr != 0L) {
+            return NativeCore.getEntryHistory(dbPtr, uuid)
+        }
+        return emptyList()
+    }
+
+    fun restoreEntryHistory(entryUuid: String, historyUuid: String): Boolean {
+        if (dbPtr != 0L) {
+            val success = NativeCore.restoreEntryHistory(dbPtr, entryUuid, historyUuid)
+            if (success) {
+                refreshEntries()
+                if (selectedEntry?.uuid == entryUuid) selectEntry(entryUuid)
+                return true
+            }
+        }
+        return false
+    }
+
+    fun emptyRecycleBin(): Boolean {
+        if (dbPtr != 0L) {
+            val success = NativeCore.emptyRecycleBin(dbPtr)
+            if (success) {
+                refreshGroups()
+                refreshEntries()
                 return true
             }
         }
@@ -164,7 +277,7 @@ class DatabaseViewModel : ViewModel() {
                     Log.e("DatabaseViewModel", "Failed to save database to URI", e)
                 }
             } else {
-                Log.e("DatabaseViewModel", "saveDatabaseAsBytes returned null, file not truncated.")
+                Log.e("DatabaseViewModel", "saveDatabaseAsBytes returned null")
             }
         }
     }
@@ -175,7 +288,7 @@ class DatabaseViewModel : ViewModel() {
                 val bytes = NativeCore.createKeyfileAsBytes()
                 contentResolver.openOutputStream(uri, "wt")?.use { outputStream ->
                     outputStream.write(bytes)
-                    Log.i("DatabaseViewModel", "Keyfile created at URI successfully.")
+                    Log.i("DatabaseViewModel", "Keyfile created successfully.")
                 }
             } catch (e: Exception) {
                 Log.e("DatabaseViewModel", "Failed to create keyfile", e)
@@ -183,9 +296,19 @@ class DatabaseViewModel : ViewModel() {
         }
     }
 
-    private fun refreshEntries() {
+    fun refreshGroups() {
         if (dbPtr != 0L) {
-            entries = NativeCore.getEntries(dbPtr)
+            groups = NativeCore.getGroups(dbPtr)
+        }
+    }
+
+    fun refreshEntries() {
+        if (dbPtr != 0L) {
+            entries = if (currentGroupUuid == null) {
+                NativeCore.getEntries(dbPtr) // Recursive for root search etc.
+            } else {
+                NativeCore.getEntriesInGroup(dbPtr, currentGroupUuid!!)
+            }
         }
     }
 
@@ -195,7 +318,9 @@ class DatabaseViewModel : ViewModel() {
             dbPtr = 0
             isUnlocked = false
             rootGroupName = ""
-            entries = emptyList()
+            entries = emptyList<Entry>()
+            groups = emptyList<GroupNode>()
+            currentGroupUuid = null
             selectedEntry = null
         }
     }

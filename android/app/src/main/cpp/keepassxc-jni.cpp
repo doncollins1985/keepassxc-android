@@ -4,6 +4,7 @@
 #include <android/log.h>
 
 #include "core/Database.h"
+#include "core/Metadata.h"
 #include "core/Group.h"
 #include "core/Entry.h"
 #include "keys/CompositeKey.h"
@@ -340,6 +341,28 @@ Java_org_keepassxc_android_NativeCore_getRootGroupName(
     return env->NewStringUTF("Unknown Root");
 }
 
+extern "C" JNIEXPORT jstring JNICALL
+Java_org_keepassxc_android_NativeCore_getTotp(
+        JNIEnv* env,
+        jobject /* thiz */,
+        jlong dbPtr,
+        jstring entryUuidHex) {
+    if (dbPtr == 0) return nullptr;
+
+    const char* nativeUuidHex = env->GetStringUTFChars(entryUuidHex, nullptr);
+    QUuid uuid = QUuid::fromHex(nativeUuidHex);
+    env->ReleaseStringUTFChars(entryUuidHex, nativeUuidHex);
+
+    Database* db = reinterpret_cast<Database*>(dbPtr);
+    Group* rootGroup = db->rootGroup();
+    if (!rootGroup) return nullptr;
+
+    Entry* entry = rootGroup->findEntryByUuid(uuid, true);
+    if (!entry || !entry->hasTotp()) return nullptr;
+
+    return env->NewStringUTF(entry->totp().toUtf8().constData());
+}
+
 extern "C" JNIEXPORT jobject JNICALL
 Java_org_keepassxc_android_NativeCore_getEntryDetails(
         JNIEnv* env,
@@ -394,6 +417,7 @@ Java_org_keepassxc_android_NativeCore_addEntry(
         JNIEnv* env,
         jobject /* thiz */,
         jlong dbPtr,
+        jstring groupUuidHex,
         jstring title,
         jstring username,
         jstring password,
@@ -401,9 +425,16 @@ Java_org_keepassxc_android_NativeCore_addEntry(
         jstring notes) {
     if (dbPtr == 0) return env->NewStringUTF("");
 
+    const char* nativeGroupUuidHex = env->GetStringUTFChars(groupUuidHex, nullptr);
+    QUuid groupUuid = QUuid::fromHex(nativeGroupUuidHex);
+    env->ReleaseStringUTFChars(groupUuidHex, nativeGroupUuidHex);
+
     Database* db = reinterpret_cast<Database*>(dbPtr);
     Group* rootGroup = db->rootGroup();
     if (!rootGroup) return env->NewStringUTF("");
+
+    Group* group = rootGroup->findGroupByUuid(groupUuid);
+    if (!group) group = rootGroup;
 
     Entry* entry = new Entry();
     entry->setUuid(QUuid::createUuid());
@@ -434,7 +465,7 @@ Java_org_keepassxc_android_NativeCore_addEntry(
         env->ReleaseStringUTFChars(notes, n);
     }
 
-    entry->setGroup(rootGroup);
+    entry->setGroup(group);
 
     return env->NewStringUTF(entry->uuidToHex().toUtf8().constData());
 }
@@ -528,4 +559,316 @@ Java_org_keepassxc_android_NativeCore_getEntries(
     }
 
     return list;
+}
+
+static void recursiveGetGroups(JNIEnv* env, jobject list, jmethodID listAdd, jclass groupNodeClass, jmethodID groupNodeConstructor, Group* group, int depth, const QString& path) {
+    QString currentPath = path.isEmpty() ? group->name() : path + "/" + group->name();
+
+    jstring name = env->NewStringUTF(group->name().toUtf8().constData());
+    jstring uuid = env->NewStringUTF(group->uuidToHex().toUtf8().constData());
+    jstring fullPath = env->NewStringUTF(currentPath.toUtf8().constData());
+    
+    jobject node = env->NewObject(groupNodeClass, groupNodeConstructor, name, uuid, (jint)depth, fullPath);
+    env->CallBooleanMethod(list, listAdd, node);
+
+    env->DeleteLocalRef(name);
+    env->DeleteLocalRef(uuid);
+    env->DeleteLocalRef(fullPath);
+    env->DeleteLocalRef(node);
+
+    for (Group* child : group->children()) {
+        recursiveGetGroups(env, list, listAdd, groupNodeClass, groupNodeConstructor, child, depth + 1, currentPath);
+    }
+}
+
+extern "C" JNIEXPORT jobject JNICALL
+Java_org_keepassxc_android_NativeCore_getGroups(
+        JNIEnv* env,
+        jobject /* thiz */,
+        jlong dbPtr) {
+    
+    jclass listClass = env->FindClass("java/util/ArrayList");
+    jmethodID listConstructor = env->GetMethodID(listClass, "<init>", "()V");
+    jmethodID listAdd = env->GetMethodID(listClass, "add", "(Ljava/lang/Object;)Z");
+    jobject list = env->NewObject(listClass, listConstructor);
+
+    if (dbPtr == 0) return list;
+
+    Database* db = reinterpret_cast<Database*>(dbPtr);
+    Group* rootGroup = db->rootGroup();
+    if (!rootGroup) return list;
+
+    jclass groupNodeClass = env->FindClass("org/keepassxc/android/models/GroupNode");
+    jmethodID groupNodeConstructor = env->GetMethodID(groupNodeClass, "<init>", "(Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;)V");
+
+    recursiveGetGroups(env, list, listAdd, groupNodeClass, groupNodeConstructor, rootGroup, 0, "");
+
+    return list;
+}
+
+extern "C" JNIEXPORT jobject JNICALL
+Java_org_keepassxc_android_NativeCore_getEntriesInGroup(
+        JNIEnv* env,
+        jobject /* thiz */,
+        jlong dbPtr,
+        jstring groupUuidHex) {
+    
+    jclass listClass = env->FindClass("java/util/ArrayList");
+    jmethodID listConstructor = env->GetMethodID(listClass, "<init>", "()V");
+    jmethodID listAdd = env->GetMethodID(listClass, "add", "(Ljava/lang/Object;)Z");
+    jobject list = env->NewObject(listClass, listConstructor);
+
+    if (dbPtr == 0) return list;
+
+    const char* nativeUuidHex = env->GetStringUTFChars(groupUuidHex, nullptr);
+    QUuid uuid = QUuid::fromHex(nativeUuidHex);
+    env->ReleaseStringUTFChars(groupUuidHex, nativeUuidHex);
+
+    Database* db = reinterpret_cast<Database*>(dbPtr);
+    Group* rootGroup = db->rootGroup();
+    if (!rootGroup) return list;
+
+    Group* group = (uuid.isNull()) ? rootGroup : rootGroup->findGroupByUuid(uuid);
+    if (!group) return list;
+
+    jclass entryClass = env->FindClass("org/keepassxc/android/models/Entry");
+    jmethodID entryConstructor = env->GetMethodID(entryClass, "<init>", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+
+    for (Entry* entry : group->entries()) {
+        jstring title = env->NewStringUTF(entry->title().toUtf8().constData());
+        jstring username = env->NewStringUTF(entry->username().toUtf8().constData());
+        jstring uuid = env->NewStringUTF(entry->uuidToHex().toUtf8().constData());
+
+        jobject entryObj = env->NewObject(entryClass, entryConstructor, title, username, uuid);
+        env->CallBooleanMethod(list, listAdd, entryObj);
+
+        env->DeleteLocalRef(title);
+        env->DeleteLocalRef(username);
+        env->DeleteLocalRef(uuid);
+        env->DeleteLocalRef(entryObj);
+    }
+
+    return list;
+}
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_org_keepassxc_android_NativeCore_addGroup(
+        JNIEnv* env,
+        jobject /* thiz */,
+        jlong dbPtr,
+        jstring parentUuidHex,
+        jstring name) {
+    if (dbPtr == 0) return env->NewStringUTF("");
+
+    const char* nativeParentUuidHex = env->GetStringUTFChars(parentUuidHex, nullptr);
+    QUuid parentUuid = QUuid::fromHex(nativeParentUuidHex);
+    env->ReleaseStringUTFChars(parentUuidHex, nativeParentUuidHex);
+
+    Database* db = reinterpret_cast<Database*>(dbPtr);
+    Group* rootGroup = db->rootGroup();
+    if (!rootGroup) return env->NewStringUTF("");
+
+    Group* parent = rootGroup->findGroupByUuid(parentUuid);
+    if (!parent) parent = rootGroup;
+
+    Group* group = new Group();
+    group->setUuid(QUuid::createUuid());
+    
+    if (name) {
+        const char* n = env->GetStringUTFChars(name, nullptr);
+        group->setName(QString::fromUtf8(n));
+        env->ReleaseStringUTFChars(name, n);
+    }
+
+    group->setParent(parent);
+
+    return env->NewStringUTF(group->uuidToHex().toUtf8().constData());
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_org_keepassxc_android_NativeCore_renameGroup(
+        JNIEnv* env,
+        jobject /* thiz */,
+        jlong dbPtr,
+        jstring groupUuidHex,
+        jstring newName) {
+    if (dbPtr == 0) return false;
+
+    const char* nativeUuidHex = env->GetStringUTFChars(groupUuidHex, nullptr);
+    QUuid uuid = QUuid::fromHex(nativeUuidHex);
+    env->ReleaseStringUTFChars(groupUuidHex, nativeUuidHex);
+
+    Database* db = reinterpret_cast<Database*>(dbPtr);
+    Group* rootGroup = db->rootGroup();
+    if (!rootGroup) return false;
+
+    Group* group = rootGroup->findGroupByUuid(uuid);
+    if (!group) return false;
+
+    if (newName) {
+        const char* n = env->GetStringUTFChars(newName, nullptr);
+        group->setName(QString::fromUtf8(n));
+        env->ReleaseStringUTFChars(newName, n);
+    }
+
+    return true;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_org_keepassxc_android_NativeCore_deleteGroup(
+        JNIEnv* env,
+        jobject /* thiz */,
+        jlong dbPtr,
+        jstring groupUuidHex) {
+    if (dbPtr == 0) return false;
+
+    const char* nativeUuidHex = env->GetStringUTFChars(groupUuidHex, nullptr);
+    QUuid uuid = QUuid::fromHex(nativeUuidHex);
+    env->ReleaseStringUTFChars(groupUuidHex, nativeUuidHex);
+
+    Database* db = reinterpret_cast<Database*>(dbPtr);
+    Group* rootGroup = db->rootGroup();
+    if (!rootGroup) return false;
+
+    Group* group = rootGroup->findGroupByUuid(uuid);
+    if (!group || group == rootGroup) return false;
+
+    Group* recycleBin = db->metadata()->recycleBin();
+    if (recycleBin && group != recycleBin && !recycleBin->groupsRecursive(true).contains(group)) {
+        db->recycleGroup(group);
+    } else {
+        delete group;
+    }
+
+    return true;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_org_keepassxc_android_NativeCore_moveEntry(
+        JNIEnv* env,
+        jobject /* thiz */,
+        jlong dbPtr,
+        jstring entryUuidHex,
+        jstring groupUuidHex) {
+    if (dbPtr == 0) return false;
+
+    const char* nativeEntryUuidHex = env->GetStringUTFChars(entryUuidHex, nullptr);
+    QUuid entryUuid = QUuid::fromHex(nativeEntryUuidHex);
+    env->ReleaseStringUTFChars(entryUuidHex, nativeEntryUuidHex);
+
+    const char* nativeGroupUuidHex = env->GetStringUTFChars(groupUuidHex, nullptr);
+    QUuid groupUuid = QUuid::fromHex(nativeGroupUuidHex);
+    env->ReleaseStringUTFChars(groupUuidHex, nativeGroupUuidHex);
+
+    Database* db = reinterpret_cast<Database*>(dbPtr);
+    Group* rootGroup = db->rootGroup();
+    if (!rootGroup) return false;
+
+    Entry* entry = rootGroup->findEntryByUuid(entryUuid, true);
+    if (!entry) return false;
+
+    Group* group = rootGroup->findGroupByUuid(groupUuid);
+    if (!group) return false;
+
+    entry->setGroup(group);
+    return true;
+}
+
+extern "C" JNIEXPORT jobject JNICALL
+Java_org_keepassxc_android_NativeCore_getEntryHistory(
+        JNIEnv* env,
+        jobject /* thiz */,
+        jlong dbPtr,
+        jstring entryUuidHex) {
+    
+    jclass listClass = env->FindClass("java/util/ArrayList");
+    jmethodID listConstructor = env->GetMethodID(listClass, "<init>", "()V");
+    jmethodID listAdd = env->GetMethodID(listClass, "add", "(Ljava/lang/Object;)Z");
+    jobject list = env->NewObject(listClass, listConstructor);
+
+    if (dbPtr == 0) return list;
+
+    const char* nativeUuidHex = env->GetStringUTFChars(entryUuidHex, nullptr);
+    QUuid uuid = QUuid::fromHex(nativeUuidHex);
+    env->ReleaseStringUTFChars(entryUuidHex, nativeUuidHex);
+
+    Database* db = reinterpret_cast<Database*>(dbPtr);
+    Group* rootGroup = db->rootGroup();
+    if (!rootGroup) return list;
+
+    Entry* entry = rootGroup->findEntryByUuid(uuid, true);
+    if (!entry) return list;
+
+    jclass historyItemClass = env->FindClass("org/keepassxc/android/models/EntryHistoryItem");
+    jmethodID historyItemConstructor = env->GetMethodID(historyItemClass, "<init>", "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;J)V");
+
+    QList<Entry*> history = entry->historyItems();
+    for (int i = 0; i < history.size(); ++i) {
+        Entry* h = history[i];
+        jstring title = env->NewStringUTF(h->title().toUtf8().constData());
+        jstring username = env->NewStringUTF(h->username().toUtf8().constData());
+        jstring url = env->NewStringUTF(h->url().toUtf8().constData());
+        jstring uuidStr = env->NewStringUTF(h->uuidToHex().toUtf8().constData());
+        jlong modified = h->timeInfo().lastModificationTime().toMSecsSinceEpoch();
+
+        jobject item = env->NewObject(historyItemClass, historyItemConstructor, i, title, username, url, uuidStr, modified);
+        env->CallBooleanMethod(list, listAdd, item);
+
+        env->DeleteLocalRef(title);
+        env->DeleteLocalRef(username);
+        env->DeleteLocalRef(url);
+        env->DeleteLocalRef(uuidStr);
+        env->DeleteLocalRef(item);
+    }
+
+    return list;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_org_keepassxc_android_NativeCore_restoreEntryHistory(
+        JNIEnv* env,
+        jobject /* thiz */,
+        jlong dbPtr,
+        jstring entryUuidHex,
+        jstring historyUuidHex) {
+    if (dbPtr == 0) return false;
+
+    const char* nativeUuidHex = env->GetStringUTFChars(entryUuidHex, nullptr);
+    QUuid uuid = QUuid::fromHex(nativeUuidHex);
+    env->ReleaseStringUTFChars(entryUuidHex, nativeUuidHex);
+
+    const char* nativeHistoryUuidHex = env->GetStringUTFChars(historyUuidHex, nullptr);
+    QUuid historyUuid = QUuid::fromHex(nativeHistoryUuidHex);
+    env->ReleaseStringUTFChars(historyUuidHex, nativeHistoryUuidHex);
+
+    Database* db = reinterpret_cast<Database*>(dbPtr);
+    Group* rootGroup = db->rootGroup();
+    if (!rootGroup) return false;
+
+    Entry* entry = rootGroup->findEntryByUuid(uuid, true);
+    if (!entry) return false;
+
+    for (Entry* h : entry->historyItems()) {
+        if (h->uuid() == historyUuid) {
+            entry->copyDataFrom(h);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_org_keepassxc_android_NativeCore_emptyRecycleBin(
+        JNIEnv* env,
+        jobject /* thiz */,
+        jlong dbPtr) {
+    if (dbPtr == 0) return false;
+
+    Database* db = reinterpret_cast<Database*>(dbPtr);
+    Group* recycleBin = db->metadata()->recycleBin();
+    if (!recycleBin) return false;
+
+    db->emptyRecycleBin();
+    return true;
 }

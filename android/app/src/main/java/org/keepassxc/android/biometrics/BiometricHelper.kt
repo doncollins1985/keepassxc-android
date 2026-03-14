@@ -53,4 +53,13 @@ class BiometricHelper {
         cipher.init(Cipher.DECRYPT_MODE, secretKey, spec)
         return cipher
     }
+
+    fun getEncryptCryptoObject(): androidx.biometric.BiometricPrompt.CryptoObject {
+        generateSecretKey()
+        return androidx.biometric.BiometricPrompt.CryptoObject(getEncryptCipher())
+    }
+
+    fun getDecryptCryptoObject(iv: ByteArray): androidx.biometric.BiometricPrompt.CryptoObject {
+        return androidx.biometric.BiometricPrompt.CryptoObject(getDecryptCipher(iv))
+    }
 }

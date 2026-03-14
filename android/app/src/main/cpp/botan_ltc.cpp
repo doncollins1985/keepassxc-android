@@ -320,8 +320,36 @@ public:
 
     void finish(Botan::secure_vector<uint8_t>& data) override
     {
-        if (!data.empty()) {
-            process(data.data(), data.size());
+        if (m_mode == ModeImpl::Aes128Cbc || m_mode == ModeImpl::Aes256Cbc || m_mode == ModeImpl::TwofishCbc) {
+            if (m_encrypt) {
+                // Add PKCS7 padding
+                size_t pad_len = 16 - (data.size() % 16);
+                for (size_t i = 0; i < pad_len; ++i) {
+                    data.push_back(static_cast<uint8_t>(pad_len));
+                }
+                process(data.data(), data.size());
+            } else {
+                // Decrypt first
+                if (!data.empty()) {
+                    if (data.size() % 16 != 0) {
+                        throw std::runtime_error("Ciphertext not multiple of block size");
+                    }
+                    process(data.data(), data.size());
+                }
+                // Remove PKCS7 padding
+                if (!data.empty()) {
+                    uint8_t pad_len = data.back();
+                    if (pad_len > 0 && pad_len <= 16 && data.size() >= pad_len) {
+                        data.resize(data.size() - pad_len);
+                    } else {
+                        throw std::runtime_error("Invalid PKCS7 padding");
+                    }
+                }
+            }
+        } else {
+            if (!data.empty()) {
+                process(data.data(), data.size());
+            }
         }
     }
 

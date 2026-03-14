@@ -2,23 +2,29 @@
 #define BOTAN_RNG_H
 #include <stdint.h>
 #include <stddef.h>
-#include <stdio.h>
+#include <stdlib.h>
+
 namespace Botan {
+    inline void secure_random_fill(uint8_t* out, size_t len) {
+        arc4random_buf(out, len);
+    }
+
     class RandomNumberGenerator {
     public:
         virtual ~RandomNumberGenerator() {}
         virtual void randomize(uint8_t*, size_t) {}
     };
-    class Autoseeded_RNG : public RandomNumberGenerator {};
-    class System_RNG : public RandomNumberGenerator {};
-
-    inline void secure_random_fill(uint8_t* out, size_t len) {
-        FILE* f = fopen("/dev/urandom", "rb");
-        if (f) {
-            size_t read = fread(out, 1, len, f);
-            (void)read;
-            fclose(f);
+    class Autoseeded_RNG : public RandomNumberGenerator {
+    public:
+        void randomize(uint8_t* out, size_t len) override {
+            secure_random_fill(out, len);
         }
-    }
+    };
+    class System_RNG : public RandomNumberGenerator {
+    public:
+        void randomize(uint8_t* out, size_t len) override {
+            secure_random_fill(out, len);
+        }
+    };
 }
 #endif

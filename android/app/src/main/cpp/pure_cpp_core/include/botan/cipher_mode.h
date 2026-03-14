@@ -9,7 +9,7 @@ namespace Botan {
     enum class Cipher_Dir { Encryption, Decryption, ENCRYPTION, DECRYPTION };
     class Cipher_Mode {
     public:
-        static std::unique_ptr<Cipher_Mode> create_or_throw(const std::string&, Cipher_Dir) { return std::make_unique<Cipher_Mode>(); }
+        static std::unique_ptr<Cipher_Mode> create_or_throw(const std::string&, Cipher_Dir);
         virtual ~Cipher_Mode() {}
         virtual void set_key(const uint8_t*, size_t) {}
         virtual void start(const uint8_t*, size_t) {}

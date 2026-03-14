@@ -5,7 +5,7 @@
 namespace Botan {
     class BlockCipher {
     public:
-        static std::unique_ptr<BlockCipher> create(const char*) { return std::make_unique<BlockCipher>(); }
+        static std::unique_ptr<BlockCipher> create(const char*);
         virtual ~BlockCipher() {}
         virtual void set_key(const unsigned char*, size_t) {}
         virtual void encrypt(std::vector<unsigned char>&) {}

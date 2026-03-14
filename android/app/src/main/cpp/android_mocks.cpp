@@ -127,9 +127,5 @@ void AutoTypeAssociations::dataChanged(int) {}
 void AutoTypeAssociations::aboutToReset() {}
 void AutoTypeAssociations::reset() {}
 
-// Argon2 mock
-extern "C" {
-    int argon2_hash(uint32_t, uint32_t, uint32_t, const void*, size_t, const void*, size_t, void*, size_t, void*, size_t, uint32_t, uint32_t) { return 0; }
-    const char* argon2_error_message(int) { return "mock error"; }
-}
+
 
