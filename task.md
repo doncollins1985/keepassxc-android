@@ -1,0 +1,24 @@
+# Port KeePassXC to Android
+
+- [x] Phase 1: Compile KeePassXC C++ Core for Android
+  - [x] Mock Qt Dependencies (QtCore, QtNetwork, etc.)
+  - [x] Resolve all remaining CMake/Ninja compilation errors in `keepassxc-android-core`
+  - [x] Ensure `gradle build` completes successfully
+- [x] Phase 2: Create JNI Bridge (Java Native Interface)
+  - [x] Define JNI Environment and `extern "C"` wrappers for core features
+  - [x] Integrate JNI with Android `external` Kotlin classes
+- [x] Phase 3: Android App Architecture & Data Management
+  - [x] Setup Android room/datastore for app preferences
+  - [x] Implement KeyStore API for Biometric Unlock
+- [x] Phase 4: User Interface (Jetpack Compose / UI)
+  - [x] Login / Unlock Database Screen
+  - [x] Main Database View (Groups, Entries, Search)
+  - [x] Entry Detail View (Passwords, TOTP, Notes)
+  - [x] Settings & Configuration Screen
+- [x] Phase 5: Android System Integrations
+  - [x] Autofill Service Integration
+  - [x] Biometric Prompt Integration
+  - [x] Storage Access Framework (SAF) for local/cloud KDBX files
+- [x] Phase 6: Testing & Verification
+  - [x] Unit Tests for JNI Bridge
+  - [x] UI / Integration Tests

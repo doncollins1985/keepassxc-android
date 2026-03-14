@@ -1,6 +1,9 @@
 CMakeLists.txt.*
 build*/
 cmake-build-*/
+android/app/.cxx/
+android/app/build/
+*.gradle/
 release*/
 .idea/
 *.iml
