@@ -25,6 +25,7 @@ Status (2026-03-07): `Code complete, device verification pending`
   - Replaced RNG/Argon2/Botan crypto stubs with linked implementations.
   - Added deterministic native self-test coverage (`NativeCore.runNativeSelfTest`).
   - Android debug builds succeed across all configured ABIs.
+<<<<<<< HEAD
   - Group Management (navigation, add, rename, delete, move) implemented in JNI, ViewModel, and Compose UI.
   - Biometric Keystore integration for secure master password wrapping.
   - TOTP ticking timer UI and auto-refresh implemented.
@@ -32,6 +33,10 @@ Status (2026-03-07): `Code complete, device verification pending`
 - Pending:
   - Execute instrumentation suite on connected emulator/device (`connectedDebugAndroidTest` currently fails only due no connected device).
   - Production-grade Autofill Service matching (currently remains a prototype).
+=======
+- Pending:
+  - Execute instrumentation suite on connected emulator/device (`connectedDebugAndroidTest` currently fails only due no connected device).
+>>>>>>> 6675bcd4c6350900c3077bf10203a5af88e3ba18
 
 ## Phase 2: Core Data Parity
 ### Scope
