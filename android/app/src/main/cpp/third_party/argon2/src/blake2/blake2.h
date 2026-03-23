@@ -18,7 +18,6 @@
 #ifndef PORTABLE_BLAKE2_H
 #define PORTABLE_BLAKE2_H
 
-#include <limits.h>
 #include <argon2.h>
 
 #if defined(__cplusplus)
